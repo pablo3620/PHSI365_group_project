@@ -1,11 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.18.4
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 2f12747c-2c63-4039-97ba-39bac4e1ea7c
-using Plots
+# ╔═╡ 4a845f2c-f6e7-49e8-ba95-b938f52cdbad
+using Plots, Statistics
 
 # ╔═╡ 6bbb78d2-b960-11ec-2cfa-8deda907e547
 # Flip a spin with the modified Metropolis rate
@@ -58,7 +58,7 @@ begin
 end
 
 # ╔═╡ cf444542-0356-4979-8eb6-3c359fb497d3
-J = 3
+J = 1
 
 # ╔═╡ 3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
 E(S_random,J)
@@ -79,6 +79,7 @@ begin
 		S0 = rand([1.0, -1], 60, 60)# initial condition
 		for i in 1:10000
 			step!(S0, 1.0/T,J)
+			
 		end
 		append!(result, E(S0,J))
 	end
@@ -150,10 +151,59 @@ begin
 	ylabel!("Energy per particle")
 end
 
+# ╔═╡ 9d7a4d00-201a-4ad4-8136-c09e01d3b56f
+begin
+	result_final1 = []
+	for T in 0.1:0.1:7
+		current = []
+			S0 = rand([1.0, -1], 60, 60)# initial condition
+			for i in 1:11000
+				step!(S0, 1.0/T,J)
+				if i >= 10000
+					append!(current, E(S0,J))
+			end
+		end
+		append!(result_final1, mean(current))
+	end
+end
+
+# ╔═╡ 3874f1cf-8230-413b-9597-7959017cc419
+begin
+	plot(0.1:0.1:7, result_final1)
+	xlabel!("T * Kb")
+	ylabel!("Energy")
+end
+
+# ╔═╡ ed1864d4-fe95-4bec-be67-7be33f85e169
+begin
+	result_final = []
+	for T in 0.1:0.1:7
+		current = []
+		for run in 1:10
+			S0 = rand([1.0, -1], 60, 60)# initial condition
+			for i in 1:11000
+				step!(S0, 1.0/T,J)
+				if i >= 10000
+					append!(current, E(S0,J))
+				end
+			end
+		end
+		append!(result_final, mean(current))
+	end
+end
+
+# ╔═╡ 4ae940f0-a90d-4488-b08f-0c3140ccf177
+begin
+	plot(0.1:0.1:7, result_final)
+	xlabel!("T * Kb")
+	ylabel!("Energy")
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 Plots = "~1.27.5"
@@ -671,9 +721,9 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
-git-tree-sha1 = "ad368663a5e20dbb8d6dc2fddeefe4dae0781ae8"
+git-tree-sha1 = "c6c0f690d0cc7caddb74cef7aa847b824a16b256"
 uuid = "ea2cea3b-5b76-57ae-a6ef-0a8af62496e1"
-version = "5.15.3+0"
+version = "5.15.3+1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1037,7 +1087,7 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═2f12747c-2c63-4039-97ba-39bac4e1ea7c
+# ╠═4a845f2c-f6e7-49e8-ba95-b938f52cdbad
 # ╠═6bbb78d2-b960-11ec-2cfa-8deda907e547
 # ╠═e65b4a3c-d1bb-48b6-9930-60e56aa860db
 # ╟─bac58c1b-5aef-4efe-92aa-0b81da616fdf
@@ -1054,5 +1104,9 @@ version = "0.9.1+5"
 # ╠═c5bab0ed-1728-4a8e-9694-9423f91ea87e
 # ╠═da685969-92c9-4827-96c3-eb485577ecb7
 # ╠═b61bc17b-78fa-4274-8f3f-9c4d073784d1
+# ╠═9d7a4d00-201a-4ad4-8136-c09e01d3b56f
+# ╠═3874f1cf-8230-413b-9597-7959017cc419
+# ╠═ed1864d4-fe95-4bec-be67-7be33f85e169
+# ╠═4ae940f0-a90d-4488-b08f-0c3140ccf177
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

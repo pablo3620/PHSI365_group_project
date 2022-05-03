@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.4
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -21,6 +21,9 @@ begin
 end
 
 # _Climate visualisation made with_ [Makie.jl](http://juliaplots.org/MakieReferenceImages/gallery//worldclim_visualization/index.html)
+
+# ╔═╡ a23282bb-563b-4b6b-bb3d-8d45ff46e419
+using Random
 
 # ╔═╡ 3ea52ea4-5e8a-11eb-1b9a-135782cc1d1c
 html"<button onclick=present()>Present</button>"
@@ -417,19 +420,17 @@ begin
 	heatmap(S,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 end
 
-# ╔═╡ 4b9a358b-fffa-4717-be1f-2afabdc35ce0
-begin
-
-	S0 = rand([1.0, -1], 60, 60); # initial condition
-	T = 0.1# set kB = 1
-end
-
 # ╔═╡ 1c0d86d1-1c00-404e-8644-23468b994b87
-anim = @animate for i in 1:100
-	for j in 1:500
-		step!(S0, 1.0/T)
+begin
+	Random.seed!(1234)
+	S0 = rand([1.0, -1], 60, 60); # initial condition
+	T = 0.01# set kB = 1
+	anim = @animate for i in 1:400
+		for j in 1:10
+			step!(S0, 1.0/T)
+		end
+		heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 	end
-	heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 end
 
 # ╔═╡ d375ece7-745b-4f51-ac11-70d1f6e354bb
@@ -472,6 +473,7 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ShortCodes = "f62ebe17-55c5-4640-972f-b59c0dd11ccf"
 
 [compat]
@@ -1040,9 +1042,9 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
-git-tree-sha1 = "ad368663a5e20dbb8d6dc2fddeefe4dae0781ae8"
+git-tree-sha1 = "c6c0f690d0cc7caddb74cef7aa847b824a16b256"
 uuid = "ea2cea3b-5b76-57ae-a6ef-0a8af62496e1"
-version = "5.15.3+0"
+version = "5.15.3+1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1450,7 +1452,7 @@ version = "0.9.1+5"
 # ╠═271b5b1a-db01-4d5a-b98a-a5891302a23a
 # ╠═0638a292-22d2-4c0a-8b21-93a88982dd52
 # ╠═19456ff4-6d4c-4310-9fe5-1f35ad77ee56
-# ╠═4b9a358b-fffa-4717-be1f-2afabdc35ce0
+# ╠═a23282bb-563b-4b6b-bb3d-8d45ff46e419
 # ╠═1c0d86d1-1c00-404e-8644-23468b994b87
 # ╠═d375ece7-745b-4f51-ac11-70d1f6e354bb
 # ╠═de85b19e-e0d8-41bc-ace5-3eafa175d938
