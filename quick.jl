@@ -16,6 +16,13 @@ using Random
 # ╔═╡ e6c07ad8-fcff-42ab-9d44-025267e899f9
 using JLD2
 
+# ╔═╡ 28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
+md"""
+Functions from the MarkovChains notebook
+
+In theory the scaler should not be used and we should just look at one random point at a time but this is much slower. Doing a small subset at a time by only looking at 0.1 of the points is close enough approximation. (I think)
+"""
+
 # ╔═╡ 6bbb78d2-b960-11ec-2cfa-8deda907e547
 # Flip a spin with the modified Metropolis rate
 function flip(s,ΔE,β)
@@ -44,6 +51,20 @@ function step!(S,β,J)
     return
 end
 
+# ╔═╡ b1fc03d3-9b28-4c6e-a686-b0b650707948
+# could be good if we can vectorise the for loop to make faster but currently this is slower
+# function step2!(S,β,J)
+#     ΔE = J*2*S.*(
+#         circshift(S,(0, 1)).+
+#         circshift(S,(0,-1)).+
+#         circshift(S,(1, 0)).+
+#         circshift(S,(-1,0)))
+    
+# 	S =[flip(S[i],ΔE[i],β) for i in eachindex(S)]
+    
+#     return
+# end
+
 # ╔═╡ bac58c1b-5aef-4efe-92aa-0b81da616fdf
 md"""
 $$E = -J\sum_{\langle i,j\rangle}s_is_j$$
@@ -60,14 +81,19 @@ function E(S,J)
         circshift(S,(-1,0))))
 end 
 
+# ╔═╡ cf444542-0356-4979-8eb6-3c359fb497d3
+J = 1
+
+# ╔═╡ b86540ed-1a14-4386-b9d9-344c81e5a905
+md"""
+Energy is much lower with a ordered matrix compared to random/chaotic matrix
+"""
+
 # ╔═╡ 7ac720a9-7e15-4713-88ca-d234b8f132ab
 begin
 	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	#heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 end
-
-# ╔═╡ cf444542-0356-4979-8eb6-3c359fb497d3
-J = 1
 
 # ╔═╡ 3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
 E(S_random,J)
@@ -75,11 +101,16 @@ E(S_random,J)
 # ╔═╡ 7018a605-4be9-44af-bae8-d455566168fb
 begin
 	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	#heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 end
 
 # ╔═╡ 8a9ded08-3139-4913-b9b9-850a3661dc98
 E(S_same,J)
+
+# ╔═╡ f708a609-0461-4a71-87a5-1a990dffc4d8
+md"""
+evolve the system with 100,1000,10000 steps and plot the final energy at each temperature. temperature is $T K_b$ when comparing to the analytical solution.
+"""
 
 # ╔═╡ b63a826d-6175-4fe1-a28c-7ec7a3f5db92
 begin
@@ -127,6 +158,13 @@ begin
 	ylabel!("Energy")
 end
 
+# ╔═╡ a1253c47-61a1-444a-b1c3-072bf51c94c9
+md"""
+10000 runs seem to be relativly stable while 100 runs is definitely not enough
+
+trying the same with different size matrices
+"""
+
 # ╔═╡ c5bab0ed-1728-4a8e-9694-9423f91ea87e
 begin
 	result2small = []
@@ -160,6 +198,13 @@ begin
 	ylabel!("Energy per particle")
 end
 
+# ╔═╡ 45cf4dee-42f7-40f1-883d-81e1b08644bf
+md"""
+does not appear to be any systematic differences with the different size matrices but smaller matrix has more variance.
+
+to reduce the variation of the plot save the average energy for the last 1000 runs after doing 10000 runs.
+"""
+
 # ╔═╡ 9d7a4d00-201a-4ad4-8136-c09e01d3b56f
 begin
 	result_final1 = []
@@ -182,6 +227,11 @@ begin
 	xlabel!("T * Kb")
 	ylabel!("Energy")
 end
+
+# ╔═╡ 8f1c0d31-780a-4bc2-8837-c7588b959125
+md"""
+smooth at high temperatures but not smooth at low temps. this is cause when low temp sometimes come to a meta-stable solution that form due to the limited matrix size. example below of 2 runs with same low temp but one finishes with a line through the middle increasing energy.
+"""
 
 # ╔═╡ e4895b8a-9f10-4ee6-b915-91c195271cc4
 begin
@@ -210,7 +260,13 @@ begin
 	gif(anim2)
 end
 
+# ╔═╡ 241d8c3c-a9de-4463-aa30-ef73df156412
+md"""
+then do 50 runs of this at each temp and we get basically a smooth line
+"""
+
 # ╔═╡ ed1864d4-fe95-4bec-be67-7be33f85e169
+# do not run (2500 second runtime)
 # begin
 #  	result_final = []
 #  	for T in 0.1:0.1:7
@@ -1216,27 +1272,35 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╠═4a845f2c-f6e7-49e8-ba95-b938f52cdbad
+# ╟─28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
 # ╠═6bbb78d2-b960-11ec-2cfa-8deda907e547
 # ╠═e65b4a3c-d1bb-48b6-9930-60e56aa860db
+# ╠═b1fc03d3-9b28-4c6e-a686-b0b650707948
 # ╟─bac58c1b-5aef-4efe-92aa-0b81da616fdf
 # ╠═2d7e4c3b-60d3-4a40-b788-5d7729dc62ba
-# ╠═7ac720a9-7e15-4713-88ca-d234b8f132ab
 # ╠═cf444542-0356-4979-8eb6-3c359fb497d3
+# ╟─b86540ed-1a14-4386-b9d9-344c81e5a905
+# ╠═7ac720a9-7e15-4713-88ca-d234b8f132ab
 # ╠═3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
 # ╠═7018a605-4be9-44af-bae8-d455566168fb
 # ╠═8a9ded08-3139-4913-b9b9-850a3661dc98
+# ╟─f708a609-0461-4a71-87a5-1a990dffc4d8
 # ╠═b63a826d-6175-4fe1-a28c-7ec7a3f5db92
 # ╠═4639fde1-c205-4078-a39f-8330acb17346
 # ╠═228edf68-925c-44f8-9091-c89e891fadfd
 # ╠═bbe11a7f-fcbc-4c1b-95b0-b41beb371f3c
+# ╟─a1253c47-61a1-444a-b1c3-072bf51c94c9
 # ╠═c5bab0ed-1728-4a8e-9694-9423f91ea87e
 # ╠═da685969-92c9-4827-96c3-eb485577ecb7
 # ╠═b61bc17b-78fa-4274-8f3f-9c4d073784d1
+# ╟─45cf4dee-42f7-40f1-883d-81e1b08644bf
 # ╠═9d7a4d00-201a-4ad4-8136-c09e01d3b56f
 # ╠═3874f1cf-8230-413b-9597-7959017cc419
+# ╟─8f1c0d31-780a-4bc2-8837-c7588b959125
 # ╠═565390cc-318b-4d73-8159-94a94a1fe6a1
 # ╠═e4895b8a-9f10-4ee6-b915-91c195271cc4
 # ╠═79fdba89-f961-44e1-af87-c31ae598723b
+# ╟─241d8c3c-a9de-4463-aa30-ef73df156412
 # ╠═ed1864d4-fe95-4bec-be67-7be33f85e169
 # ╠═e6c07ad8-fcff-42ab-9d44-025267e899f9
 # ╠═1391a1e8-40c1-4def-aeb8-54d91550d209
