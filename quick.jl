@@ -154,6 +154,7 @@ begin
 	plot(0.1:0.1:10, result, label = "10000 runs", legend=:bottomright)
 	plot!(0.1:0.1:10, result2, label = "1000 runs")
 	plot!(0.1:0.1:10, result3, label = "100 runs")
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
 	xlabel!("T * Kb")
 	ylabel!("Energy")
 end
@@ -194,6 +195,7 @@ begin
 	plot(0.1:0.1:10, result2small/30^2, label = "30×30", legend=:bottomright)
 	plot!(0.1:0.1:10, result2/60^2, label = "60×60")
 	plot!(0.1:0.1:10, result2big/120^2, label = "120×120")
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
 	xlabel!("T * Kb")
 	ylabel!("Energy per particle")
 end
@@ -224,6 +226,7 @@ end
 # ╔═╡ 3874f1cf-8230-413b-9597-7959017cc419
 begin
 	plot(0.1:0.1:7, result_final1)
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
 	xlabel!("T * Kb")
 	ylabel!("Energy")
 end
@@ -293,9 +296,13 @@ then do 50 runs of this at each temp and we get basically a smooth line
 # ╔═╡ 4ae940f0-a90d-4488-b08f-0c3140ccf177
 begin
 	plot(0.1:0.1:7, result_final)
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
 	xlabel!("T * Kb")
 	ylabel!("Energy")
 end
+
+# ╔═╡ a2e59347-f2b4-4cc1-89e9-524572ffba27
+result_final
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1306,5 +1313,6 @@ version = "0.9.1+5"
 # ╠═1391a1e8-40c1-4def-aeb8-54d91550d209
 # ╠═b5db5cc5-48b3-4617-b3fd-d409e697b195
 # ╠═4ae940f0-a90d-4488-b08f-0c3140ccf177
+# ╠═a2e59347-f2b4-4cc1-89e9-524572ffba27
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
