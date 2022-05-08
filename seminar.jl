@@ -4,344 +4,46 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 4a845f2c-f6e7-49e8-ba95-b938f52cdbad
+# ╔═╡ 0e5b6084-ce70-11ec-0d81-6137f91044bd
 begin
 	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes
 	gr(legend=false,size=(650,450),bottom_margin=0.5cm,left_margin=0.3cm)
 end
 
-# ╔═╡ 565390cc-318b-4d73-8159-94a94a1fe6a1
-using Random
-
-# ╔═╡ e6c07ad8-fcff-42ab-9d44-025267e899f9
-using JLD2
-
-# ╔═╡ 28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
+# ╔═╡ dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
 md"""
-Functions from the MarkovChains notebook
+# History and significance
 
-In theory the scaler should not be used and we should just look at one random point at a time but this is much slower. Doing a small subset at a time by only looking at 0.1 of the points is close enough approximation. (I think)
 """
 
-# ╔═╡ 6bbb78d2-b960-11ec-2cfa-8deda907e547
-# Flip a spin with the modified Metropolis rate
-function flip(s,ΔE,β)
-    # scaler variable is used to make the algorithm faster. we set a scaling value which will limit the times we actually flip the spin for negative ΔE.
-    # Otherwise we would end up fliping many more spins for each step!
-    scaler = 0.1
-    if ΔE < 0
-        rand() < scaler ? (return -s) : (return s)
-    else
-        rand() < scaler*exp(-β*ΔE) ? (return -s) : (return s)
-    end
-end
-
-# ╔═╡ e65b4a3c-d1bb-48b6-9930-60e56aa860db
-# step entire lattice one step forward in "time" along the Markov chain
-function step!(S,β,J)
-    ΔE = J*2*S.*(
-        circshift(S,(0, 1)).+
-        circshift(S,(0,-1)).+
-        circshift(S,(1, 0)).+
-        circshift(S,(-1,0)))
-    
-    for i in eachindex(S)
-        S[i] = flip(S[i],ΔE[i],β)
-    end
-    return
-end
-
-# ╔═╡ b1fc03d3-9b28-4c6e-a686-b0b650707948
-# could be good if we can vectorise the for loop to make faster but currently this is slower
-# function step2!(S,β,J)
-#     ΔE = J*2*S.*(
-#         circshift(S,(0, 1)).+
-#         circshift(S,(0,-1)).+
-#         circshift(S,(1, 0)).+
-#         circshift(S,(-1,0)))
-    
-# 	S =[flip(S[i],ΔE[i],β) for i in eachindex(S)]
-    
-#     return
-# end
-
-# ╔═╡ bac58c1b-5aef-4efe-92aa-0b81da616fdf
+# ╔═╡ 5846ae7d-5a5a-4380-8599-7c486e75e6ff
 md"""
-$$E = -J\sum_{\langle i,j\rangle}s_is_j$$
+# Description of the system
 
-where $\mu$ is the atomic *magnetic moment*, $B$ is external magnetic field and $J$, is called the *exchange energy* and it specifies the strenght of the spin-spin interaction between the atoms.
 """
 
-# ╔═╡ 2d7e4c3b-60d3-4a40-b788-5d7729dc62ba
-function E(S,J)
-	sum(-J*2*S.*(
-        circshift(S,(0, 1)).+
-        circshift(S,(0,-1)).+
-        circshift(S,(1, 0)).+
-        circshift(S,(-1,0))))
-end
-
-# ╔═╡ cf444542-0356-4979-8eb6-3c359fb497d3
-J = 1
-
-# ╔═╡ b86540ed-1a14-4386-b9d9-344c81e5a905
+# ╔═╡ 63641878-36af-4728-9f39-4cd911fc85ef
 md"""
-Energy is much lower with a ordered matrix compared to random/chaotic matrix
+# Description of the numerical methods
 """
 
-# ╔═╡ 7ac720a9-7e15-4713-88ca-d234b8f132ab
-begin
-	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
-E(S_random,J)
-
-# ╔═╡ 7018a605-4be9-44af-bae8-d455566168fb
-begin
-	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 8a9ded08-3139-4913-b9b9-850a3661dc98
-E(S_same,J)
-
-# ╔═╡ f708a609-0461-4a71-87a5-1a990dffc4d8
+# ╔═╡ 75415688-1ca4-4497-a106-f88efef5f56e
 md"""
-evolve the system with 100,1000,10000 steps and plot the final energy at each temperature. temperature is $T K_b$ when comparing to the analytical solution.
+# Presentation of results and interpretation
 """
-
-# ╔═╡ b63a826d-6175-4fe1-a28c-7ec7a3f5db92
-begin
-	result = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 60, 60)# initial condition
-		for i in 1:10000
-			step!(S0, 1.0/T,J)
-			
-		end
-		append!(result, E(S0,J))
-	end
-end
-
-# ╔═╡ 4639fde1-c205-4078-a39f-8330acb17346
-begin
-	result2 = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 60, 60)# initial condition
-		for i in 1:1000
-			step!(S0, 1.0/T,J)
-		end
-		append!(result2, E(S0,J))
-	end
-end
-
-# ╔═╡ 228edf68-925c-44f8-9091-c89e891fadfd
-begin
-	result3 = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 60, 60)# initial condition
-		for i in 1:100
-			step!(S0, 1.0/T,J)
-		end
-		append!(result3, E(S0,J))
-	end
-end
-
-# ╔═╡ bbe11a7f-fcbc-4c1b-95b0-b41beb371f3c
-begin
-	plot(0.1:0.1:10, result, label = "10000 runs", legend=:bottomright)
-	plot!(0.1:0.1:10, result2, label = "1000 runs")
-	plot!(0.1:0.1:10, result3, label = "100 runs")
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
-# ╔═╡ a1253c47-61a1-444a-b1c3-072bf51c94c9
-md"""
-10000 runs seem to be relativly stable while 100 runs is definitely not enough
-
-trying the same with different size matrices
-"""
-
-# ╔═╡ c5bab0ed-1728-4a8e-9694-9423f91ea87e
-begin
-	result2small = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 30, 30)# initial condition
-		for i in 1:1000
-			step!(S0, 1.0/T,J)
-		end
-		append!(result2small, E(S0,J))
-	end
-end
-
-# ╔═╡ da685969-92c9-4827-96c3-eb485577ecb7
-begin
-	result2big = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 120, 120)# initial condition
-		for i in 1:1000
-			step!(S0, 1.0/T,J)
-		end
-		append!(result2big, E(S0,J))
-	end
-end
-
-# ╔═╡ b61bc17b-78fa-4274-8f3f-9c4d073784d1
-begin
-	plot(0.1:0.1:10, result2small/30^2, label = "30×30", legend=:bottomright)
-	plot!(0.1:0.1:10, result2/60^2, label = "60×60")
-	plot!(0.1:0.1:10, result2big/120^2, label = "120×120")
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy per particle")
-end
-
-# ╔═╡ 45cf4dee-42f7-40f1-883d-81e1b08644bf
-md"""
-does not appear to be any systematic differences with the different size matrices but smaller matrix has more variance.
-
-to reduce the variation of the plot save the average energy for the last 1000 runs after doing 10000 runs.
-"""
-
-# ╔═╡ 9d7a4d00-201a-4ad4-8136-c09e01d3b56f
-begin
-	result_final1 = []
-	for T in 0.1:0.1:7
-		current = []
-			S0 = rand([1.0, -1], 60, 60)# initial condition
-			for i in 1:11000
-				step!(S0, 1.0/T,J)
-				if i >= 10000
-					append!(current, E(S0,J))
-			end
-		end
-		append!(result_final1, mean(current))
-	end
-end
-
-# ╔═╡ 3874f1cf-8230-413b-9597-7959017cc419
-begin
-	plot(0.1:0.1:7, result_final1)
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
-# ╔═╡ 8f1c0d31-780a-4bc2-8837-c7588b959125
-md"""
-smooth at high temperatures but not smooth at low temps. this is cause when low temp sometimes come to a meta-stable solution that form due to the limited matrix size. example below of 2 runs with same low temp but one finishes with a line through the middle increasing energy.
-"""
-
-# ╔═╡ e4895b8a-9f10-4ee6-b915-91c195271cc4
-begin
-	Random.seed!(1234)
-	S0 = rand([1.0, -1], 60, 60); # initial condition
-	T = 0.01# set kB = 1
-	anim = @animate for i in 1:400
-		for j in 1:20
-			step!(S0, 1.0/T,J)
-		end
-		heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-	end
-	gif(anim)
-end
-
-# ╔═╡ 79fdba89-f961-44e1-af87-c31ae598723b
-begin
-	Random.seed!(234)
-	S1 = rand([1.0, -1], 60, 60); # initial condition
-	anim2 = @animate for i in 1:400
-		for j in 1:20
-			step!(S1, 1.0/T, J)
-		end
-		heatmap(S1,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-	end
-	gif(anim2)
-end
-
-# ╔═╡ 241d8c3c-a9de-4463-aa30-ef73df156412
-md"""
-then do 50 runs of this at each temp and we get basically a smooth line
-"""
-
-# ╔═╡ c8ba9f78-e6a0-4cb1-9743-fd3fb36b07af
-T2 = 0.1:0.1:7
-
-# ╔═╡ ed1864d4-fe95-4bec-be67-7be33f85e169
-# do not run (2500 second runtime)
-# begin
-#  	result_final = []
-#  	for T in T2
-#  		current = []
-#  		for run in 1:50
-#  			S0 = rand([1.0, -1], 60, 60)# initial condition
-#  			for i in 1:11000
-#  				step!(S0, 1.0/T,J)
-#  				if i >= 10000
-#  					append!(current, E(S0,J))
-#  				end
-#  			end
-# 		end
-# 		append!(result_final, mean(current))
-# 	end
-# end
-
-# ╔═╡ 1391a1e8-40c1-4def-aeb8-54d91550d209
-# @save "result_final.jld2" result_final # creates a local .jld2 file
-
-# ╔═╡ b5db5cc5-48b3-4617-b3fd-d409e697b195
-@load "result_final.jld2" result_final
-
-# ╔═╡ 4ae940f0-a90d-4488-b08f-0c3140ccf177
-begin
-	plot(T2, result_final)
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
-# ╔═╡ c3fe4f8c-9a3f-4dd0-883e-e0a95dcef146
-function gradientCalc(result)
-    maxDiff = 0
-    indexOfMaxDiffInResult = 0
-    for i in eachindex(result)
-        if i == 1
-            continue
-        else
-            if result[i]-result[i-1] > maxDiff
-                maxDiff = result[i]-result[i-1]
-                indexOfMaxDiffInResult = i
-            end
-        end
-    end
-    return indexOfMaxDiffInResult
-end
-
-# ╔═╡ d7a84d78-16e8-4691-ab54-cbe538ea34b2
-T2[gradientCalc(result_final)]
-
-# ╔═╡ 268a1785-aa79-426c-9b7d-d736ea1c4f2e
-
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ShortCodes = "f62ebe17-55c5-4640-972f-b59c0dd11ccf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-JLD2 = "~0.4.22"
 LaTeXStrings = "~1.3.0"
-Plots = "~1.28.1"
+Plots = "~1.29.0"
 PlutoUI = "~0.7.38"
 ShortCodes = "~0.3.3"
 """
@@ -405,16 +107,22 @@ uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.0"
 
 [[deps.ColorSchemes]]
-deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
-git-tree-sha1 = "12fc73e5e0af68ad3137b886e3f7c1eacfca2640"
+deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "Random"]
+git-tree-sha1 = "7297381ccb5df764549818d9a7d57e45f1057d30"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.17.1"
+version = "3.18.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
 git-tree-sha1 = "024fe24d83e4a5bf5fc80501a314ce0d1aa35597"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 version = "0.11.0"
+
+[[deps.ColorVectorSpace]]
+deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "SpecialFunctions", "Statistics", "TensorCore"]
+git-tree-sha1 = "3f1f500312161f1ae067abe07d13b40f78f32e07"
+uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
+version = "0.9.8"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
@@ -445,9 +153,9 @@ version = "1.10.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "3daef5523dd2e769dad2365274f760ff5f282c7d"
+git-tree-sha1 = "cc1a8e22627f33c789ab60b36a9132ac050bbf75"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.11"
+version = "0.18.12"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -499,12 +207,6 @@ deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers",
 git-tree-sha1 = "d8a578692e3077ac998b50c0217dfd67f21d1e5f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.0+0"
-
-[[deps.FileIO]]
-deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "80ced645013a5dbdc52cf70329399c35ce007fae"
-uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.13.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -641,12 +343,6 @@ version = "1.4.0"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
-
-[[deps.JLD2]]
-deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
-git-tree-sha1 = "81b9477b49402b47fbe7f7ae0b252077f53e4a08"
-uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.22"
 
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
@@ -842,11 +538,21 @@ version = "1.3.5+1"
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
+[[deps.OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "ab05aa4cc89736e95915b01e7279e61b1bfe33b8"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "1.1.14+0"
+
+[[deps.OpenSpecFun_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
+uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
+version = "0.5.5+0"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -895,9 +601,9 @@ version = "1.2.0"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "d05baca9ec540de3d8b12ef660c7353aae9f9477"
+git-tree-sha1 = "d457f881ea56bbfa18222642de51e0abf67b9027"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.28.1"
+version = "1.29.0"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -998,6 +704,12 @@ version = "1.0.1"
 deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
+[[deps.SpecialFunctions]]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+git-tree-sha1 = "5ba658aeecaaf96923dce0da9e703bd1fe7666f9"
+uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
+version = "2.1.4"
+
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
 git-tree-sha1 = "cd56bf18ed715e8b09f06ef8c6b781e6cdc49911"
@@ -1022,9 +734,9 @@ version = "0.33.16"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "8f705dd141733d79aa2932143af6c6e0b6cea8df"
+git-tree-sha1 = "e75d82493681dfd884a357952bbd7ab0608e1dc3"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.6"
+version = "0.6.7"
 
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
@@ -1051,6 +763,12 @@ version = "1.7.0"
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
+
+[[deps.TensorCore]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "1feb45f88d133a655e001435632f019a9a1bcdb6"
+uuid = "62fd8b95-f654-4bbd-a8a5-9c27f68ccd50"
+version = "0.1.1"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -1301,44 +1019,10 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═4a845f2c-f6e7-49e8-ba95-b938f52cdbad
-# ╟─28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
-# ╠═6bbb78d2-b960-11ec-2cfa-8deda907e547
-# ╠═e65b4a3c-d1bb-48b6-9930-60e56aa860db
-# ╠═b1fc03d3-9b28-4c6e-a686-b0b650707948
-# ╟─bac58c1b-5aef-4efe-92aa-0b81da616fdf
-# ╠═2d7e4c3b-60d3-4a40-b788-5d7729dc62ba
-# ╠═cf444542-0356-4979-8eb6-3c359fb497d3
-# ╟─b86540ed-1a14-4386-b9d9-344c81e5a905
-# ╠═7ac720a9-7e15-4713-88ca-d234b8f132ab
-# ╠═3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
-# ╠═7018a605-4be9-44af-bae8-d455566168fb
-# ╠═8a9ded08-3139-4913-b9b9-850a3661dc98
-# ╟─f708a609-0461-4a71-87a5-1a990dffc4d8
-# ╠═b63a826d-6175-4fe1-a28c-7ec7a3f5db92
-# ╠═4639fde1-c205-4078-a39f-8330acb17346
-# ╠═228edf68-925c-44f8-9091-c89e891fadfd
-# ╠═bbe11a7f-fcbc-4c1b-95b0-b41beb371f3c
-# ╟─a1253c47-61a1-444a-b1c3-072bf51c94c9
-# ╠═c5bab0ed-1728-4a8e-9694-9423f91ea87e
-# ╠═da685969-92c9-4827-96c3-eb485577ecb7
-# ╠═b61bc17b-78fa-4274-8f3f-9c4d073784d1
-# ╟─45cf4dee-42f7-40f1-883d-81e1b08644bf
-# ╠═9d7a4d00-201a-4ad4-8136-c09e01d3b56f
-# ╠═3874f1cf-8230-413b-9597-7959017cc419
-# ╟─8f1c0d31-780a-4bc2-8837-c7588b959125
-# ╠═565390cc-318b-4d73-8159-94a94a1fe6a1
-# ╠═e4895b8a-9f10-4ee6-b915-91c195271cc4
-# ╠═79fdba89-f961-44e1-af87-c31ae598723b
-# ╟─241d8c3c-a9de-4463-aa30-ef73df156412
-# ╠═c8ba9f78-e6a0-4cb1-9743-fd3fb36b07af
-# ╠═ed1864d4-fe95-4bec-be67-7be33f85e169
-# ╠═e6c07ad8-fcff-42ab-9d44-025267e899f9
-# ╠═1391a1e8-40c1-4def-aeb8-54d91550d209
-# ╠═b5db5cc5-48b3-4617-b3fd-d409e697b195
-# ╠═4ae940f0-a90d-4488-b08f-0c3140ccf177
-# ╠═c3fe4f8c-9a3f-4dd0-883e-e0a95dcef146
-# ╠═d7a84d78-16e8-4691-ab54-cbe538ea34b2
-# ╠═268a1785-aa79-426c-9b7d-d736ea1c4f2e
+# ╟─0e5b6084-ce70-11ec-0d81-6137f91044bd
+# ╟─dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
+# ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
+# ╟─63641878-36af-4728-9f39-4cd911fc85ef
+# ╟─75415688-1ca4-4497-a106-f88efef5f56e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
