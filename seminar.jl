@@ -25,6 +25,86 @@ md"""
 # ╔═╡ 63641878-36af-4728-9f39-4cd911fc85ef
 md"""
 # Description of the numerical methods
+
+## Numerical methods
+
+Numerically it is impractical to solve for all possible evolutions in the Ising model as there are simply too many. For example, for a tiny $10\times 10$ matrix of molecules the partition function 
+
+$$Z = \sum_{s_i} e^{-\beta U}$$
+
+contains $2^{100}$ terms, a number impossibly big for a computer to calculate in any reasonable timeframe.
+
+While it is impossible to compute the probabilities of all the possible states, using the Metropolis algorithm it is possible to evolve the system using the Boltzmann factors as guide for the probabilities of a particular evolution of the system. This algorithm, as described in Schroeder, chooses a random molecule and if flipping the molecule reduces the energy of the system, it flips it. On the other hand if flipping the molecule increases the energy of the system, the probability of flipping it becomes $e^{-\Delta E \beta}$. This process is then repeated to simulate the evolution of the system.  
+
+To find the critical temperature $T_c$ at which phase transition occurs, computationally, we would run the Metropolis algorithm for sufficient number of evolutions at different temperatures and compare the energy in the final state using the formula 
+
+$$E = -J \sum_{\langle i,j\rangle} s_i s_j$$
+
+Packages needed may include Plots for plotting
+
+"""
+
+# ╔═╡ b3ecf2fa-1330-4eb4-b275-2b69c21bdb46
+function E(S,J)
+	sum(-J*2*S.*(
+        circshift(S,(0, 1)).+
+        circshift(S,(0,-1)).+
+        circshift(S,(1, 0)).+
+        circshift(S,(-1,0))))
+end
+
+# ╔═╡ 45492289-9899-428a-9785-3786fd234b7b
+# Flip a spin with the modified Metropolis rate
+function flip(s,ΔE,β)
+    # scaler variable is used to make the algorithm faster. we set a scaling value which will limit the times we actually flip the spin for negative ΔE.
+    # Otherwise we would end up fliping many more spins for each step!
+    scaler = 0.1
+    if ΔE < 0
+        rand() < scaler ? (return -s) : (return s)
+    else
+        rand() < scaler*exp(-β*ΔE) ? (return -s) : (return s)
+    end
+end
+
+# ╔═╡ d24b0ac0-61ad-4639-905e-e922f87dbc7e
+# step entire lattice one step forward in "time" along the Markov chain
+function step!(S,β,J)
+    ΔE = J*2*S.*(
+        circshift(S,(0, 1)).+
+        circshift(S,(0,-1)).+
+        circshift(S,(1, 0)).+
+        circshift(S,(-1,0)))
+    
+    for i in eachindex(S)
+        S[i] = flip(S[i],ΔE[i],β)
+    end
+    return
+end
+
+# ╔═╡ d09837c4-d394-40d2-a08b-b4798a293c88
+J = 1
+
+# ╔═╡ b880778b-8582-4381-bd15-576dfd354604
+begin
+	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ 3d9eef57-95cc-4b01-8603-474bdf109e84
+E(S_random,J)
+
+# ╔═╡ dafda7e1-c39d-4103-b17a-b301574a2f33
+begin
+	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ 13b91714-7176-454d-9f91-3671538557ff
+E(S_same,J)
+
+# ╔═╡ b6845860-26b4-4a64-b89a-d1f0344fcd88
+md"""
+Energy is much lower with a ordered matrix compared to random/chaotic matrix
 """
 
 # ╔═╡ 75415688-1ca4-4497-a106-f88efef5f56e
@@ -1023,6 +1103,15 @@ version = "0.9.1+5"
 # ╟─dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
 # ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
 # ╟─63641878-36af-4728-9f39-4cd911fc85ef
+# ╠═b3ecf2fa-1330-4eb4-b275-2b69c21bdb46
+# ╟─d09837c4-d394-40d2-a08b-b4798a293c88
+# ╟─b880778b-8582-4381-bd15-576dfd354604
+# ╠═3d9eef57-95cc-4b01-8603-474bdf109e84
+# ╠═dafda7e1-c39d-4103-b17a-b301574a2f33
+# ╠═13b91714-7176-454d-9f91-3671538557ff
+# ╠═b6845860-26b4-4a64-b89a-d1f0344fcd88
+# ╠═45492289-9899-428a-9785-3786fd234b7b
+# ╠═d24b0ac0-61ad-4639-905e-e922f87dbc7e
 # ╟─75415688-1ca4-4497-a106-f88efef5f56e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
