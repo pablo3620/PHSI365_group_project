@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 0e5b6084-ce70-11ec-0d81-6137f91044bd
 begin
-	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes
+	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes, Random
 	gr(legend=false,size=(650,450),bottom_margin=0.5cm,left_margin=0.3cm)
 end
 
@@ -53,6 +53,32 @@ function E(S,J)
         circshift(S,(-1,0))))
 end
 
+# ╔═╡ d09837c4-d394-40d2-a08b-b4798a293c88
+J = 1
+
+# ╔═╡ b880778b-8582-4381-bd15-576dfd354604
+begin
+	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ 3d9eef57-95cc-4b01-8603-474bdf109e84
+E(S_random,J)
+
+# ╔═╡ dafda7e1-c39d-4103-b17a-b301574a2f33
+begin
+	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ 13b91714-7176-454d-9f91-3671538557ff
+E(S_same,J)
+
+# ╔═╡ b6845860-26b4-4a64-b89a-d1f0344fcd88
+md"""
+Energy is much lower with a ordered matrix compared to random/chaotic matrix
+"""
+
 # ╔═╡ 45492289-9899-428a-9785-3786fd234b7b
 # Flip a spin with the modified Metropolis rate
 function flip(s,ΔE,β)
@@ -81,32 +107,6 @@ function step!(S,β,J)
     return
 end
 
-# ╔═╡ d09837c4-d394-40d2-a08b-b4798a293c88
-J = 1
-
-# ╔═╡ b880778b-8582-4381-bd15-576dfd354604
-begin
-	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 3d9eef57-95cc-4b01-8603-474bdf109e84
-E(S_random,J)
-
-# ╔═╡ dafda7e1-c39d-4103-b17a-b301574a2f33
-begin
-	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 13b91714-7176-454d-9f91-3671538557ff
-E(S_same,J)
-
-# ╔═╡ b6845860-26b4-4a64-b89a-d1f0344fcd88
-md"""
-Energy is much lower with a ordered matrix compared to random/chaotic matrix
-"""
-
 # ╔═╡ 75415688-1ca4-4497-a106-f88efef5f56e
 md"""
 # Presentation of results and interpretation
@@ -118,6 +118,7 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ShortCodes = "f62ebe17-55c5-4640-972f-b59c0dd11ccf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 

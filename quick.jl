@@ -16,6 +16,9 @@ using Random
 # ╔═╡ e6c07ad8-fcff-42ab-9d44-025267e899f9
 using JLD2
 
+# ╔═╡ ddb14b0e-1e77-4395-bf45-074f9eebd4b3
+using Interpolations
+
 # ╔═╡ 28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
 md"""
 Functions from the MarkovChains notebook
@@ -314,7 +317,7 @@ function gradientCalc(result)
         else
             if result[i]-result[i-1] > maxDiff
                 maxDiff = result[i]-result[i-1]
-                indexOfMaxDiffInResult = i
+                indexOfMaxDiffInResult = [i,i-1]
             end
         end
     end
@@ -322,14 +325,18 @@ function gradientCalc(result)
 end
 
 # ╔═╡ d7a84d78-16e8-4691-ab54-cbe538ea34b2
-T2[gradientCalc(result_final)]
+mean(T2[gradientCalc(result_final)])
 
 # ╔═╡ 268a1785-aa79-426c-9b7d-d736ea1c4f2e
+itp = interpolate((T2,), result_final, Gridded(Linear()));
 
+# ╔═╡ 9a0a90b2-6e0f-4a41-a948-1fcbe6b80c84
+plot(itp)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -339,6 +346,7 @@ ShortCodes = "f62ebe17-55c5-4640-972f-b59c0dd11ccf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+Interpolations = "~0.13.6"
 JLD2 = "~0.4.22"
 LaTeXStrings = "~1.3.0"
 Plots = "~1.28.1"
@@ -370,6 +378,12 @@ uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+
+[[deps.AxisAlgorithms]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "WoodburyMatrices"]
+git-tree-sha1 = "66771c8d21c8ff5e3a93379480a2307ac36863f7"
+uuid = "13072b0f-2c55-5437-9ae7-d433b7a33950"
+version = "1.0.1"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -621,6 +635,12 @@ version = "0.5.1"
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
+[[deps.Interpolations]]
+deps = ["AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "Requires", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
+git-tree-sha1 = "b7bc05649af456efc75d178846f47006c2c4c3c7"
+uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+version = "0.13.6"
+
 [[deps.InverseFunctions]]
 deps = ["Test"]
 git-tree-sha1 = "91b5dcf362c5add98049e6c29ee756910b03051d"
@@ -832,6 +852,12 @@ version = "1.0.0"
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
+[[deps.OffsetArrays]]
+deps = ["Adapt"]
+git-tree-sha1 = "043017e0bdeff61cfbb7afeb558ab29536bbb5ed"
+uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+version = "1.10.8"
+
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
@@ -928,6 +954,12 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[deps.Random]]
 deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[deps.Ratios]]
+deps = ["Requires"]
+git-tree-sha1 = "dc84268fe0e3335a62e315a3a7cf2afa7178a734"
+uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
+version = "0.4.3"
 
 [[deps.RecipesBase]]
 git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
@@ -1096,6 +1128,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "4528479aa01ee1b3b4cd0e6faef0e04cf16466da"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.25.0+0"
+
+[[deps.WoodburyMatrices]]
+deps = ["LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "de67fa59e33ad156a590055375a30b23c40299d3"
+uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
+version = "0.5.5"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -1339,6 +1377,8 @@ version = "0.9.1+5"
 # ╠═4ae940f0-a90d-4488-b08f-0c3140ccf177
 # ╠═c3fe4f8c-9a3f-4dd0-883e-e0a95dcef146
 # ╠═d7a84d78-16e8-4691-ab54-cbe538ea34b2
+# ╠═ddb14b0e-1e77-4395-bf45-074f9eebd4b3
 # ╠═268a1785-aa79-426c-9b7d-d736ea1c4f2e
+# ╠═9a0a90b2-6e0f-4a41-a948-1fcbe6b80c84
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
