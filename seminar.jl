@@ -180,8 +180,8 @@ begin
 	plot!(0.1:0.1:10, result2, label = "1000 runs")
 	plot!(0.1:0.1:10, result3, label = "100 runs")
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
+	xlabel!(L"T k_B")
+	ylabel!("Energy "*L"(J)")
 end
 
 # ╔═╡ 20a9fe14-bbcb-4491-8760-13a67b6d1a04
@@ -221,8 +221,8 @@ begin
 	plot!(0.1:0.1:10, result2/60^2, label = "60×60")
 	plot!(0.1:0.1:10, result2big/120^2, label = "120×120")
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy per particle")
+	xlabel!(L"T k_B")
+	ylabel!("Energy "*L"(J)")
 end
 
 # ╔═╡ 298af11f-e059-47ea-b022-76ae152c142f
@@ -250,10 +250,10 @@ end
 
 # ╔═╡ 088c3bbc-e98b-41d8-bcb3-899da03923c6
 begin
-	plot(0.1:0.1:7, result_final1)
+	plot(0.1:0.1:7, result_final1, label = "Average Energy of last 1000 steps", legend = :bottomright)
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
+	xlabel!(L"T k_B")
+	ylabel!("Energy "*L"(J)")
 end
 
 # ╔═╡ 5a0007df-7588-4689-96ac-6ff77a6793bf
@@ -313,14 +313,6 @@ T2 = 0.1:0.1:7
 # ╔═╡ eafd22ca-3b80-4931-af70-2ac9b322ff87
 @load "result_final.jld2" result_final
 
-# ╔═╡ 0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
-begin
-	plot(T2, result_final)
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
 # ╔═╡ e1f6266d-2cbc-4442-9a9d-f29c4aec1402
 function maxGradIdx(result)
     maxDiff = 0
@@ -339,7 +331,16 @@ function maxGradIdx(result)
 end
 
 # ╔═╡ 0c03555d-e924-4122-9451-e615c9326b31
-mean(T2[maxGradIdx(result_final)])
+comp_sol = mean(T2[maxGradIdx(result_final)])
+
+# ╔═╡ 0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
+begin
+	plot(T2, result_final, label = "Average energy of last 1000 steps for 50 runs", legend = :bottomright)
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
+	vline!([comp_sol], label = "Steepest point on the graph")
+	xlabel!(L"T k_B")
+	ylabel!("Energy "*L"(J)")
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1353,7 +1354,7 @@ version = "0.9.1+5"
 # ╠═3d9eef57-95cc-4b01-8603-474bdf109e84
 # ╠═dafda7e1-c39d-4103-b17a-b301574a2f33
 # ╠═13b91714-7176-454d-9f91-3671538557ff
-# ╠═b6845860-26b4-4a64-b89a-d1f0344fcd88
+# ╟─b6845860-26b4-4a64-b89a-d1f0344fcd88
 # ╠═45492289-9899-428a-9785-3786fd234b7b
 # ╠═d24b0ac0-61ad-4639-905e-e922f87dbc7e
 # ╟─75415688-1ca4-4497-a106-f88efef5f56e
@@ -1362,25 +1363,25 @@ version = "0.9.1+5"
 # ╠═c3df2089-202c-4962-be68-120fede705f0
 # ╠═7e685f26-7d7b-4101-85e5-481545dbbbaf
 # ╟─64bfa7a8-7582-4e0c-8fef-db0f240f1be3
-# ╠═91bc87af-f90f-4484-8b43-480cc7f82eb3
-# ╠═67bf1b27-4662-4f07-b2c2-d833f9e67b74
-# ╠═41557310-ea0c-4bb4-bbb3-1b2dbb373122
-# ╠═e7f289f1-5337-4a63-8f07-885f250b2585
+# ╟─91bc87af-f90f-4484-8b43-480cc7f82eb3
+# ╟─67bf1b27-4662-4f07-b2c2-d833f9e67b74
+# ╟─41557310-ea0c-4bb4-bbb3-1b2dbb373122
+# ╟─e7f289f1-5337-4a63-8f07-885f250b2585
 # ╟─20a9fe14-bbcb-4491-8760-13a67b6d1a04
-# ╠═b2206469-26ed-4a1f-837e-0e62c980e018
-# ╠═69e147f2-4a5a-440b-b955-d0299f6d2e68
-# ╠═7f7bbf4d-784d-4c58-8ac6-a7b3a13a0905
+# ╟─b2206469-26ed-4a1f-837e-0e62c980e018
+# ╟─69e147f2-4a5a-440b-b955-d0299f6d2e68
+# ╟─7f7bbf4d-784d-4c58-8ac6-a7b3a13a0905
 # ╟─298af11f-e059-47ea-b022-76ae152c142f
-# ╠═fa3f9864-3e34-4284-b260-8dc1578f98a7
-# ╠═088c3bbc-e98b-41d8-bcb3-899da03923c6
+# ╟─fa3f9864-3e34-4284-b260-8dc1578f98a7
+# ╟─088c3bbc-e98b-41d8-bcb3-899da03923c6
 # ╟─5a0007df-7588-4689-96ac-6ff77a6793bf
-# ╠═8f897eaa-3e57-4a9c-85b4-2751b6f52801
-# ╠═1988afe2-931d-4175-ada0-8d8e030a1229
-# ╠═a03fc080-3e53-49ed-b812-c3d004bb68e8
-# ╠═c7795f5e-97be-4c31-829f-169704aac88e
-# ╠═eafd22ca-3b80-4931-af70-2ac9b322ff87
+# ╟─8f897eaa-3e57-4a9c-85b4-2751b6f52801
+# ╟─1988afe2-931d-4175-ada0-8d8e030a1229
+# ╟─a03fc080-3e53-49ed-b812-c3d004bb68e8
+# ╟─c7795f5e-97be-4c31-829f-169704aac88e
+# ╟─eafd22ca-3b80-4931-af70-2ac9b322ff87
 # ╠═0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
-# ╠═e1f6266d-2cbc-4442-9a9d-f29c4aec1402
+# ╟─e1f6266d-2cbc-4442-9a9d-f29c4aec1402
 # ╠═0c03555d-e924-4122-9451-e615c9326b31
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
