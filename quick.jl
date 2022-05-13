@@ -327,11 +327,11 @@ end
 # ╔═╡ d7a84d78-16e8-4691-ab54-cbe538ea34b2
 mean(T2[gradientCalc(result_final)])
 
-# ╔═╡ 268a1785-aa79-426c-9b7d-d736ea1c4f2e
-itp = interpolate((T2,), result_final, Gridded(Linear()));
-
 # ╔═╡ 9a0a90b2-6e0f-4a41-a948-1fcbe6b80c84
-plot(itp)
+findfirst(diff(result_final) .== maximum(diff(result_final)))
+
+# ╔═╡ 3dea0484-115a-4d29-80ec-e6d4089f3f6b
+diff(result_final) .== maximum(diff(result_final))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1352,19 +1352,19 @@ version = "0.9.1+5"
 # ╠═3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
 # ╠═7018a605-4be9-44af-bae8-d455566168fb
 # ╠═8a9ded08-3139-4913-b9b9-850a3661dc98
-# ╟─f708a609-0461-4a71-87a5-1a990dffc4d8
+# ╠═f708a609-0461-4a71-87a5-1a990dffc4d8
 # ╠═b63a826d-6175-4fe1-a28c-7ec7a3f5db92
 # ╠═4639fde1-c205-4078-a39f-8330acb17346
 # ╠═228edf68-925c-44f8-9091-c89e891fadfd
 # ╠═bbe11a7f-fcbc-4c1b-95b0-b41beb371f3c
-# ╟─a1253c47-61a1-444a-b1c3-072bf51c94c9
+# ╠═a1253c47-61a1-444a-b1c3-072bf51c94c9
 # ╠═c5bab0ed-1728-4a8e-9694-9423f91ea87e
 # ╠═da685969-92c9-4827-96c3-eb485577ecb7
 # ╠═b61bc17b-78fa-4274-8f3f-9c4d073784d1
-# ╟─45cf4dee-42f7-40f1-883d-81e1b08644bf
+# ╠═45cf4dee-42f7-40f1-883d-81e1b08644bf
 # ╠═9d7a4d00-201a-4ad4-8136-c09e01d3b56f
 # ╠═3874f1cf-8230-413b-9597-7959017cc419
-# ╟─8f1c0d31-780a-4bc2-8837-c7588b959125
+# ╠═8f1c0d31-780a-4bc2-8837-c7588b959125
 # ╠═565390cc-318b-4d73-8159-94a94a1fe6a1
 # ╠═e4895b8a-9f10-4ee6-b915-91c195271cc4
 # ╠═79fdba89-f961-44e1-af87-c31ae598723b
@@ -1378,7 +1378,7 @@ version = "0.9.1+5"
 # ╠═c3fe4f8c-9a3f-4dd0-883e-e0a95dcef146
 # ╠═d7a84d78-16e8-4691-ab54-cbe538ea34b2
 # ╠═ddb14b0e-1e77-4395-bf45-074f9eebd4b3
-# ╠═268a1785-aa79-426c-9b7d-d736ea1c4f2e
 # ╠═9a0a90b2-6e0f-4a41-a948-1fcbe6b80c84
+# ╠═3dea0484-115a-4d29-80ec-e6d4089f3f6b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

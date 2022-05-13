@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 0e5b6084-ce70-11ec-0d81-6137f91044bd
 begin
-	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes, Random
+	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes, Random, JLD2
 	gr(legend=false,size=(650,450),bottom_margin=0.5cm,left_margin=0.3cm)
 end
 
@@ -112,9 +112,239 @@ md"""
 # Presentation of results and interpretation
 """
 
+# ╔═╡ 7f3e6819-9fc2-4d4f-b67b-c27668abbf80
+function anim_ising(;T, J, seed = 1234)
+	Random.seed!(1234)
+	S0 = rand([1.0, -1], 60, 60); # initial condition
+	anim = @animate for i in 1:1000
+		step!(S0, 1.0/T,J)
+		heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+	end
+	gif(anim)
+end
+
+# ╔═╡ d45f7062-fdd2-4061-840d-c9e87c2a5eea
+anim_ising(T = 0.2, J = J)
+
+# ╔═╡ c3df2089-202c-4962-be68-120fede705f0
+anim_ising(T = 2, J = J)
+
+# ╔═╡ 7e685f26-7d7b-4101-85e5-481545dbbbaf
+anim_ising(T = 4, J = J)
+
+# ╔═╡ 64bfa7a8-7582-4e0c-8fef-db0f240f1be3
+md"""
+evolve the system with 100,1000,10000 steps and plot the final energy at each temperature. temperature is $T K_b$ when comparing to the analytical solution.
+"""
+
+# ╔═╡ 91bc87af-f90f-4484-8b43-480cc7f82eb3
+begin
+	result = []
+	for T in 0.1:0.1:10
+		S0 = rand([1.0, -1], 60, 60)# initial condition
+		for i in 1:10000
+			step!(S0, 1.0/T,J)
+			
+		end
+		append!(result, E(S0,J))
+	end
+end
+
+# ╔═╡ 67bf1b27-4662-4f07-b2c2-d833f9e67b74
+begin
+	result2 = []
+	for T in 0.1:0.1:10
+		S0 = rand([1.0, -1], 60, 60)# initial condition
+		for i in 1:1000
+			step!(S0, 1.0/T,J)
+		end
+		append!(result2, E(S0,J))
+	end
+end
+
+# ╔═╡ 41557310-ea0c-4bb4-bbb3-1b2dbb373122
+begin
+	result3 = []
+	for T in 0.1:0.1:10
+		S0 = rand([1.0, -1], 60, 60)# initial condition
+		for i in 1:100
+			step!(S0, 1.0/T,J)
+		end
+		append!(result3, E(S0,J))
+	end
+end
+
+# ╔═╡ e7f289f1-5337-4a63-8f07-885f250b2585
+begin
+	plot(0.1:0.1:10, result, label = "10000 runs", legend=:bottomright)
+	plot!(0.1:0.1:10, result2, label = "1000 runs")
+	plot!(0.1:0.1:10, result3, label = "100 runs")
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
+	xlabel!("T * Kb")
+	ylabel!("Energy")
+end
+
+# ╔═╡ 20a9fe14-bbcb-4491-8760-13a67b6d1a04
+md"""
+10000 runs seem to be relativly stable while 100 runs is definitely not enough
+
+trying the same with different size matrices
+"""
+
+# ╔═╡ b2206469-26ed-4a1f-837e-0e62c980e018
+begin
+	result2small = []
+	for T in 0.1:0.1:10
+		S0 = rand([1.0, -1], 30, 30)# initial condition
+		for i in 1:1000
+			step!(S0, 1.0/T,J)
+		end
+		append!(result2small, E(S0,J))
+	end
+end
+
+# ╔═╡ 69e147f2-4a5a-440b-b955-d0299f6d2e68
+begin
+	result2big = []
+	for T in 0.1:0.1:10
+		S0 = rand([1.0, -1], 120, 120)# initial condition
+		for i in 1:1000
+			step!(S0, 1.0/T,J)
+		end
+		append!(result2big, E(S0,J))
+	end
+end
+
+# ╔═╡ 7f7bbf4d-784d-4c58-8ac6-a7b3a13a0905
+begin
+	plot(0.1:0.1:10, result2small/30^2, label = "30×30", legend=:bottomright)
+	plot!(0.1:0.1:10, result2/60^2, label = "60×60")
+	plot!(0.1:0.1:10, result2big/120^2, label = "120×120")
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
+	xlabel!("T * Kb")
+	ylabel!("Energy per particle")
+end
+
+# ╔═╡ 298af11f-e059-47ea-b022-76ae152c142f
+md"""
+does not appear to be any systematic differences with the different size matrices but smaller matrix has more variance.
+
+to reduce the variation of the plot save the average energy for the last 1000 runs after doing 10000 runs.
+"""
+
+# ╔═╡ fa3f9864-3e34-4284-b260-8dc1578f98a7
+begin
+	result_final1 = []
+	for T in 0.1:0.1:7
+		current = []
+			S0 = rand([1.0, -1], 60, 60)# initial condition
+			for i in 1:11000
+				step!(S0, 1.0/T,J)
+				if i >= 10000
+					append!(current, E(S0,J))
+			end
+		end
+		append!(result_final1, mean(current))
+	end
+end
+
+# ╔═╡ 088c3bbc-e98b-41d8-bcb3-899da03923c6
+begin
+	plot(0.1:0.1:7, result_final1)
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
+	xlabel!("T * Kb")
+	ylabel!("Energy")
+end
+
+# ╔═╡ 5a0007df-7588-4689-96ac-6ff77a6793bf
+md"""
+smooth at high temperatures but not smooth at low temps. this is cause when low temp sometimes come to a meta-stable solution that form due to the limited matrix size. example below of 2 runs with same low temp but one finishes with a line through the middle increasing energy.
+"""
+
+# ╔═╡ 8f897eaa-3e57-4a9c-85b4-2751b6f52801
+begin
+	Random.seed!(1234)
+	S1 = rand([1.0, -1], 60, 60); # initial condition
+	T1 = 0.01# set kB = 1
+	anim1 = @animate for i in 1:400
+		for j in 1:20
+			step!(S1, 1.0/T1,J)
+		end
+		heatmap(S1,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+	end
+	gif(anim1)
+end
+
+# ╔═╡ 1988afe2-931d-4175-ada0-8d8e030a1229
+begin
+	Random.seed!(234)
+	S2 = rand([1.0, -1], 60, 60); # initial condition
+	anim2 = @animate for i in 1:400
+		for j in 1:20
+			step!(S2, 1.0/T1, J)
+		end
+		heatmap(S2,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+	end
+	gif(anim2)
+end
+
+# ╔═╡ a03fc080-3e53-49ed-b812-c3d004bb68e8
+T2 = 0.1:0.1:7
+
+# ╔═╡ c7795f5e-97be-4c31-829f-169704aac88e
+# do not run (2500 second runtime)
+# begin
+#  	result_final = []
+#  	for T in T2
+#  		current = []
+#  		for run in 1:50
+#  			S0 = rand([1.0, -1], 60, 60)# initial condition
+#  			for i in 1:11000
+#  				step!(S0, 1.0/T,J)
+#  				if i >= 10000
+#  					append!(current, E(S0,J))
+#  				end
+#  			end
+# 		end
+# 		append!(result_final, mean(current))
+# 	end
+# end
+
+# ╔═╡ eafd22ca-3b80-4931-af70-2ac9b322ff87
+@load "result_final.jld2" result_final
+
+# ╔═╡ 0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
+begin
+	plot(T2, result_final)
+	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
+	xlabel!("T * Kb")
+	ylabel!("Energy")
+end
+
+# ╔═╡ e1f6266d-2cbc-4442-9a9d-f29c4aec1402
+function maxGradIdx(result)
+    maxDiff = 0
+    indexOfMaxDiffInResult = 0
+    for i in eachindex(result)
+        if i == 1
+            continue
+        else
+            if result[i]-result[i-1] > maxDiff
+                maxDiff = result[i]-result[i-1]
+                indexOfMaxDiffInResult = [i,i-1]
+            end
+        end
+    end
+    return indexOfMaxDiffInResult
+end
+
+# ╔═╡ 0c03555d-e924-4122-9451-e615c9326b31
+mean(T2[maxGradIdx(result_final)])
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
@@ -123,6 +353,7 @@ ShortCodes = "f62ebe17-55c5-4640-972f-b59c0dd11ccf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+JLD2 = "~0.4.22"
 LaTeXStrings = "~1.3.0"
 Plots = "~1.29.0"
 PlutoUI = "~0.7.38"
@@ -289,6 +520,12 @@ git-tree-sha1 = "d8a578692e3077ac998b50c0217dfd67f21d1e5f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.0+0"
 
+[[deps.FileIO]]
+deps = ["Pkg", "Requires", "UUIDs"]
+git-tree-sha1 = "9267e5f50b0e12fdfd5a2455534345c4cf2c7f7a"
+uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+version = "1.14.0"
+
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
@@ -424,6 +661,12 @@ version = "1.4.0"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
+
+[[deps.JLD2]]
+deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
+git-tree-sha1 = "81b9477b49402b47fbe7f7ae0b252077f53e4a08"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.4.22"
 
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
@@ -1100,7 +1343,7 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╟─0e5b6084-ce70-11ec-0d81-6137f91044bd
+# ╠═0e5b6084-ce70-11ec-0d81-6137f91044bd
 # ╟─dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
 # ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
 # ╟─63641878-36af-4728-9f39-4cd911fc85ef
@@ -1114,5 +1357,30 @@ version = "0.9.1+5"
 # ╠═45492289-9899-428a-9785-3786fd234b7b
 # ╠═d24b0ac0-61ad-4639-905e-e922f87dbc7e
 # ╟─75415688-1ca4-4497-a106-f88efef5f56e
+# ╠═7f3e6819-9fc2-4d4f-b67b-c27668abbf80
+# ╠═d45f7062-fdd2-4061-840d-c9e87c2a5eea
+# ╠═c3df2089-202c-4962-be68-120fede705f0
+# ╠═7e685f26-7d7b-4101-85e5-481545dbbbaf
+# ╟─64bfa7a8-7582-4e0c-8fef-db0f240f1be3
+# ╠═91bc87af-f90f-4484-8b43-480cc7f82eb3
+# ╠═67bf1b27-4662-4f07-b2c2-d833f9e67b74
+# ╠═41557310-ea0c-4bb4-bbb3-1b2dbb373122
+# ╠═e7f289f1-5337-4a63-8f07-885f250b2585
+# ╟─20a9fe14-bbcb-4491-8760-13a67b6d1a04
+# ╠═b2206469-26ed-4a1f-837e-0e62c980e018
+# ╠═69e147f2-4a5a-440b-b955-d0299f6d2e68
+# ╠═7f7bbf4d-784d-4c58-8ac6-a7b3a13a0905
+# ╟─298af11f-e059-47ea-b022-76ae152c142f
+# ╠═fa3f9864-3e34-4284-b260-8dc1578f98a7
+# ╠═088c3bbc-e98b-41d8-bcb3-899da03923c6
+# ╟─5a0007df-7588-4689-96ac-6ff77a6793bf
+# ╠═8f897eaa-3e57-4a9c-85b4-2751b6f52801
+# ╠═1988afe2-931d-4175-ada0-8d8e030a1229
+# ╠═a03fc080-3e53-49ed-b812-c3d004bb68e8
+# ╠═c7795f5e-97be-4c31-829f-169704aac88e
+# ╠═eafd22ca-3b80-4931-af70-2ac9b322ff87
+# ╠═0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
+# ╠═e1f6266d-2cbc-4442-9a9d-f29c4aec1402
+# ╠═0c03555d-e924-4122-9451-e615c9326b31
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
