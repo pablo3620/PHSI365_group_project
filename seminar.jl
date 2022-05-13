@@ -8,6 +8,7 @@ using InteractiveUtils
 begin
 	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes, Random, JLD2
 	gr(legend=false,size=(650,450),bottom_margin=0.5cm,left_margin=0.3cm)
+	PlutoUI.TableOfContents()
 end
 
 # ╔═╡ dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
@@ -26,22 +27,54 @@ md"""
 md"""
 # Description of the numerical methods
 
-## Numerical methods
-
 Numerically it is impractical to solve for all possible evolutions in the Ising model as there are simply too many. For example, for a tiny $10\times 10$ matrix of molecules the partition function 
 
 $$Z = \sum_{s_i} e^{-\beta U}$$
 
-contains $2^{100}$ terms, a number impossibly big for a computer to calculate in any reasonable timeframe.
+contains $2^{100}$ terms, a number impossibly big for a computer to calculate in any reasonable timeframe[[3](https://doi.org/10/gpk3k8)].
 
-While it is impossible to compute the probabilities of all the possible states, using the Metropolis algorithm it is possible to evolve the system using the Boltzmann factors as guide for the probabilities of a particular evolution of the system. This algorithm, as described in Schroeder, chooses a random molecule and if flipping the molecule reduces the energy of the system, it flips it. On the other hand if flipping the molecule increases the energy of the system, the probability of flipping it becomes $e^{-\Delta E \beta}$. This process is then repeated to simulate the evolution of the system.  
+While it is impossible to compute the probabilities of all the possible states, using the Metropolis algorithm it is possible to evolve the system using the Boltzmann factors as guide for the probabilities of a particular evolution of the system. This algorithm, as described in Schroeder[[3](https://doi.org/10/gpk3k8)], chooses a random molecule and if flipping the molecule reduces the energy of the system, it flips it. On the other hand if flipping the molecule increases the energy of the system, the probability of flipping it becomes $e^{-\Delta E \beta}$. Representing this in code we can make a function that can return the probability of flipping a particular node at each step.
+"""
 
+# ╔═╡ 3eb4e358-73c3-47f7-8641-772b61c59a34
+# Flip a spin with the modified Metropolis rate
+function flip(s,ΔE,β)
+    # scaler variable is used to make the algorithm faster.
+	# scaler is used so that ΔE is not recalculated at each step.
+    scaler = 0.1
+    if ΔE < 0
+        rand() < scaler ? (return -s) : (return s)
+    else
+        rand() < scaler*exp(-β*ΔE) ? (return -s) : (return s)
+    end
+end
+
+# ╔═╡ a61bd938-71a1-4427-975b-d5b0c8e8ba3d
+md"""
+This process is then repeated to simulate the evolution of the system.  
+"""
+
+# ╔═╡ 0c98e4c9-a001-4bb4-ab02-a856f50b0a15
+# step entire lattice one step forward in "time" along the Markov chain
+function step!(S,β,J)
+    ΔE = J*2*S.*(
+        circshift(S,(0, 1)).+
+        circshift(S,(0,-1)).+
+        circshift(S,(1, 0)).+
+        circshift(S,(-1,0)))
+	
+    for i in eachindex(S)
+        S[i] = flip(S[i],ΔE[i],β)
+    end
+end
+
+# ╔═╡ 19cce5e1-4c5d-4cf3-a3e9-c165f6fca948
+md"""
 To find the critical temperature $T_c$ at which phase transition occurs, computationally, we would run the Metropolis algorithm for sufficient number of evolutions at different temperatures and compare the energy in the final state using the formula 
 
 $$E = -J \sum_{\langle i,j\rangle} s_i s_j$$
 
-Packages needed may include Plots for plotting
-
+Representing this in code we have.
 """
 
 # ╔═╡ b3ecf2fa-1330-4eb4-b275-2b69c21bdb46
@@ -79,37 +112,14 @@ md"""
 Energy is much lower with a ordered matrix compared to random/chaotic matrix
 """
 
-# ╔═╡ 45492289-9899-428a-9785-3786fd234b7b
-# Flip a spin with the modified Metropolis rate
-function flip(s,ΔE,β)
-    # scaler variable is used to make the algorithm faster. we set a scaling value which will limit the times we actually flip the spin for negative ΔE.
-    # Otherwise we would end up fliping many more spins for each step!
-    scaler = 0.1
-    if ΔE < 0
-        rand() < scaler ? (return -s) : (return s)
-    else
-        rand() < scaler*exp(-β*ΔE) ? (return -s) : (return s)
-    end
-end
-
-# ╔═╡ d24b0ac0-61ad-4639-905e-e922f87dbc7e
-# step entire lattice one step forward in "time" along the Markov chain
-function step!(S,β,J)
-    ΔE = J*2*S.*(
-        circshift(S,(0, 1)).+
-        circshift(S,(0,-1)).+
-        circshift(S,(1, 0)).+
-        circshift(S,(-1,0)))
-    
-    for i in eachindex(S)
-        S[i] = flip(S[i],ΔE[i],β)
-    end
-    return
-end
-
 # ╔═╡ 75415688-1ca4-4497-a106-f88efef5f56e
 md"""
 # Presentation of results and interpretation
+"""
+
+# ╔═╡ afe6760d-e46d-4d3f-92bf-737f9bfedffb
+md"""
+## Visual evolution of Ising Model
 """
 
 # ╔═╡ 7f3e6819-9fc2-4d4f-b67b-c27668abbf80
@@ -123,14 +133,39 @@ function anim_ising(;T, J, seed = 1234)
 	gif(anim)
 end
 
+# ╔═╡ 44169313-5d07-4a22-8e68-676993869038
+md"""
+animation of ising model evolution at low temperature $(k_B T = 0.2)$
+"""
+
 # ╔═╡ d45f7062-fdd2-4061-840d-c9e87c2a5eea
 anim_ising(T = 0.2, J = J)
 
+# ╔═╡ 085a5590-c1a5-4b3b-a893-0714efe490f1
+md"""
+animation of ising model evolution at critical temperature as according to Onsager's analytical solution $\left(k_B T = \dfrac{2J}{ \log(1+\sqrt{2})}\right)$ 
+"""
+
 # ╔═╡ c3df2089-202c-4962-be68-120fede705f0
-anim_ising(T = 2, J = J)
+anim_ising(T = 2*J/(log(1+sqrt(2))), J = J)
+
+# ╔═╡ 361c4df4-7d4c-4053-b0bc-dce27d47cce9
+md"""
+animation of ising model evolution at higher temperature $(k_B T = 4)$
+"""
 
 # ╔═╡ 7e685f26-7d7b-4101-85e5-481545dbbbaf
 anim_ising(T = 4, J = J)
+
+# ╔═╡ 98da768d-1edc-48f2-bac8-9529c7336a9e
+md"""
+## Computation of energy for different temperatures
+"""
+
+# ╔═╡ d2dfb503-cec0-45d1-bf74-34857e20264c
+md"""
+### For different number of runs
+"""
 
 # ╔═╡ 64bfa7a8-7582-4e0c-8fef-db0f240f1be3
 md"""
@@ -180,7 +215,7 @@ begin
 	plot!(0.1:0.1:10, result2, label = "1000 runs")
 	plot!(0.1:0.1:10, result3, label = "100 runs")
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!(L"T k_B")
+	xlabel!(L"k_B T")
 	ylabel!("Energy "*L"(J)")
 end
 
@@ -189,6 +224,11 @@ md"""
 10000 runs seem to be relativly stable while 100 runs is definitely not enough
 
 trying the same with different size matrices
+"""
+
+# ╔═╡ 1868c4ca-4c3e-4a37-83e4-264472fb9854
+md"""
+### For different size matrices
 """
 
 # ╔═╡ b2206469-26ed-4a1f-837e-0e62c980e018
@@ -221,8 +261,8 @@ begin
 	plot!(0.1:0.1:10, result2/60^2, label = "60×60")
 	plot!(0.1:0.1:10, result2big/120^2, label = "120×120")
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!(L"T k_B")
-	ylabel!("Energy "*L"(J)")
+	xlabel!(L"k_B T")
+	ylabel!("Energy per Particle "*L"(J)")
 end
 
 # ╔═╡ 298af11f-e059-47ea-b022-76ae152c142f
@@ -252,7 +292,7 @@ end
 begin
 	plot(0.1:0.1:7, result_final1, label = "Average Energy of last 1000 steps", legend = :bottomright)
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!(L"T k_B")
+	xlabel!(L"k_B T")
 	ylabel!("Energy "*L"(J)")
 end
 
@@ -338,9 +378,18 @@ begin
 	plot(T2, result_final, label = "Average energy of last 1000 steps for 50 runs", legend = :bottomright)
 	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
 	vline!([comp_sol], label = "Steepest point on the graph")
-	xlabel!(L"T k_B")
+	xlabel!(L"k_B T")
 	ylabel!("Energy "*L"(J)")
 end
+
+# ╔═╡ 2140c6c7-8858-4f9e-9d8e-3e2f3ede9115
+md"""
+1. $(DOI("10.1103/RevModPhys.39.883"))
+
+2. $(DOI("10.1063/1.1699114"))
+
+3. $(DOI("10.1093/oso/9780192895547.001.0001"))
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1344,10 +1393,14 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═0e5b6084-ce70-11ec-0d81-6137f91044bd
+# ╟─0e5b6084-ce70-11ec-0d81-6137f91044bd
 # ╟─dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
 # ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
-# ╟─63641878-36af-4728-9f39-4cd911fc85ef
+# ╠═63641878-36af-4728-9f39-4cd911fc85ef
+# ╠═3eb4e358-73c3-47f7-8641-772b61c59a34
+# ╟─a61bd938-71a1-4427-975b-d5b0c8e8ba3d
+# ╠═0c98e4c9-a001-4bb4-ab02-a856f50b0a15
+# ╟─19cce5e1-4c5d-4cf3-a3e9-c165f6fca948
 # ╠═b3ecf2fa-1330-4eb4-b275-2b69c21bdb46
 # ╟─d09837c4-d394-40d2-a08b-b4798a293c88
 # ╟─b880778b-8582-4381-bd15-576dfd354604
@@ -1355,19 +1408,24 @@ version = "0.9.1+5"
 # ╠═dafda7e1-c39d-4103-b17a-b301574a2f33
 # ╠═13b91714-7176-454d-9f91-3671538557ff
 # ╟─b6845860-26b4-4a64-b89a-d1f0344fcd88
-# ╠═45492289-9899-428a-9785-3786fd234b7b
-# ╠═d24b0ac0-61ad-4639-905e-e922f87dbc7e
 # ╟─75415688-1ca4-4497-a106-f88efef5f56e
-# ╠═7f3e6819-9fc2-4d4f-b67b-c27668abbf80
-# ╠═d45f7062-fdd2-4061-840d-c9e87c2a5eea
-# ╠═c3df2089-202c-4962-be68-120fede705f0
-# ╠═7e685f26-7d7b-4101-85e5-481545dbbbaf
+# ╟─afe6760d-e46d-4d3f-92bf-737f9bfedffb
+# ╟─7f3e6819-9fc2-4d4f-b67b-c27668abbf80
+# ╟─44169313-5d07-4a22-8e68-676993869038
+# ╟─d45f7062-fdd2-4061-840d-c9e87c2a5eea
+# ╟─085a5590-c1a5-4b3b-a893-0714efe490f1
+# ╟─c3df2089-202c-4962-be68-120fede705f0
+# ╟─361c4df4-7d4c-4053-b0bc-dce27d47cce9
+# ╟─7e685f26-7d7b-4101-85e5-481545dbbbaf
+# ╟─98da768d-1edc-48f2-bac8-9529c7336a9e
+# ╟─d2dfb503-cec0-45d1-bf74-34857e20264c
 # ╟─64bfa7a8-7582-4e0c-8fef-db0f240f1be3
 # ╟─91bc87af-f90f-4484-8b43-480cc7f82eb3
 # ╟─67bf1b27-4662-4f07-b2c2-d833f9e67b74
 # ╟─41557310-ea0c-4bb4-bbb3-1b2dbb373122
 # ╟─e7f289f1-5337-4a63-8f07-885f250b2585
 # ╟─20a9fe14-bbcb-4491-8760-13a67b6d1a04
+# ╟─1868c4ca-4c3e-4a37-83e4-264472fb9854
 # ╟─b2206469-26ed-4a1f-837e-0e62c980e018
 # ╟─69e147f2-4a5a-440b-b955-d0299f6d2e68
 # ╟─7f7bbf4d-784d-4c58-8ac6-a7b3a13a0905
@@ -1380,8 +1438,9 @@ version = "0.9.1+5"
 # ╟─a03fc080-3e53-49ed-b812-c3d004bb68e8
 # ╟─c7795f5e-97be-4c31-829f-169704aac88e
 # ╟─eafd22ca-3b80-4931-af70-2ac9b322ff87
-# ╠═0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
+# ╟─0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
 # ╟─e1f6266d-2cbc-4442-9a9d-f29c4aec1402
 # ╠═0c03555d-e924-4122-9451-e615c9326b31
+# ╟─2140c6c7-8858-4f9e-9d8e-3e2f3ede9115
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
