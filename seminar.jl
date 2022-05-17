@@ -68,6 +68,8 @@ md"""
 ### Energy of the lattice
 
 $$E = -J \sum_{\langle i,j\rangle} s_i s_j$$
+
+Representing this in code:
 """
 
 # ╔═╡ b3ecf2fa-1330-4eb4-b275-2b69c21bdb46
@@ -79,6 +81,32 @@ function E(S,J)
         circshift(S,(-1,0))))
 end
 
+# ╔═╡ d09837c4-d394-40d2-a08b-b4798a293c88
+J = 1
+
+# ╔═╡ b880778b-8582-4381-bd15-576dfd354604
+begin
+	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ 3d9eef57-95cc-4b01-8603-474bdf109e84
+E(S_random,J)
+
+# ╔═╡ dafda7e1-c39d-4103-b17a-b301574a2f33
+begin
+	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ 13b91714-7176-454d-9f91-3671538557ff
+E(S_same,J)
+
+# ╔═╡ b6845860-26b4-4a64-b89a-d1f0344fcd88
+md"""
+Energy is much lower with a ordered matrix compared to random/chaotic matrix
+"""
+
 # ╔═╡ 5fe39ed9-8107-400b-aa74-f99752936ebf
 md"""
 ### Partition function of the Ising model
@@ -88,7 +116,7 @@ $$Z = \sum_{s_i} e^{-\beta U}$$
 
 # ╔═╡ 8cee4cf1-ad13-495f-b9ed-32c980f69b73
 md"""
-### High energy partical
+### High energy particle
 """
 
 # ╔═╡ 41c98d12-15b7-4511-a29a-b8093409bacd
@@ -101,7 +129,7 @@ Probability of Flipping $P = 1$
 
 # ╔═╡ 4914acfd-b2bf-4be6-a7b0-4f921b328798
 md"""
-### Low energy partical
+### Low energy particle
 """
 
 # ╔═╡ cc29f153-fa68-4445-8d83-aab550f5dcd2
@@ -109,16 +137,20 @@ load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project
 
 # ╔═╡ 587e582c-bb00-4b60-ab36-a650b8cc0d6f
 md"""
-Probablility of Flipping: $P = e^{-\beta \Delta E}$
+Probablility of Flipping: 
 
-Where $\beta = \frac{1}{k_B T}$ 
+$P = e^{-\beta \Delta E}$
+
+Where 
+
+$\beta = \frac{1}{k_B T}$ 
 
 When Temperature increases probability of flipping increases even if energy increases.
 """
 
 # ╔═╡ 7a1b0f62-9506-49c2-9595-9c62a2a86816
 md"""
-### Code representation 
+## Code representation 
 """
 
 # ╔═╡ 3eb4e358-73c3-47f7-8641-772b61c59a34
@@ -147,32 +179,6 @@ function step!(S,β,J)
         S[i] = flip(S[i],ΔE[i],β)
     end
 end
-
-# ╔═╡ d09837c4-d394-40d2-a08b-b4798a293c88
-J = 1
-
-# ╔═╡ b880778b-8582-4381-bd15-576dfd354604
-begin
-	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 3d9eef57-95cc-4b01-8603-474bdf109e84
-E(S_random,J)
-
-# ╔═╡ dafda7e1-c39d-4103-b17a-b301574a2f33
-begin
-	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 13b91714-7176-454d-9f91-3671538557ff
-E(S_same,J)
-
-# ╔═╡ b6845860-26b4-4a64-b89a-d1f0344fcd88
-md"""
-Energy is much lower with a ordered matrix compared to random/chaotic matrix
-"""
 
 # ╔═╡ 75415688-1ca4-4497-a106-f88efef5f56e
 md"""
@@ -205,7 +211,7 @@ anim_ising(T = 0.2, J = J)
 
 # ╔═╡ 085a5590-c1a5-4b3b-a893-0714efe490f1
 md"""
-animation of ising model evolution at critical temperature as according to Onsager's analytical solution $\left(k_B T = \dfrac{2J}{ \log(1+\sqrt{2})}\right)$ 
+animation of ising model evolution at critical temperature as according to Onsager's analytical solution $\left(k_B T = \dfrac{2J}{ \log(1+\sqrt{2})} = 2.269\right)$ 
 """
 
 # ╔═╡ c3df2089-202c-4962-be68-120fede705f0
@@ -435,6 +441,13 @@ function maxGradIdx(result)
     end
     return indexOfMaxDiffInResult
 end
+
+# ╔═╡ 5a5c2210-5c51-4d2b-8010-705c1802af18
+md"""
+### Comparison of solutions
+
+$k_B T = \dfrac{2J}{ \log(1+\sqrt{2})} = 2.269$
+"""
 
 # ╔═╡ 0c03555d-e924-4122-9451-e615c9326b31
 comp_sol = mean(T2[maxGradIdx(result_final)])
@@ -1913,14 +1926,20 @@ version = "0.9.1+5"
 # ╠═981f8a50-a658-446e-81cd-c843aed3ccf8
 # ╟─3a5e2adc-ca2f-49dd-aee5-20562084d92c
 # ╟─3bb83472-3375-4901-80d5-458b70923a58
-# ╠═5bc168e8-421f-4e56-bfdb-1530a7fc01d4
+# ╟─5bc168e8-421f-4e56-bfdb-1530a7fc01d4
 # ╟─e62c4b74-d42a-47a9-8d9f-f12b032d36da
-# ╠═e257a7d9-5d28-4bf5-9552-1c6180e1131a
+# ╟─e257a7d9-5d28-4bf5-9552-1c6180e1131a
 # ╟─531100ff-c192-4b80-806e-a900460167b2
 # ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
 # ╟─63641878-36af-4728-9f39-4cd911fc85ef
 # ╟─19cce5e1-4c5d-4cf3-a3e9-c165f6fca948
 # ╠═b3ecf2fa-1330-4eb4-b275-2b69c21bdb46
+# ╟─d09837c4-d394-40d2-a08b-b4798a293c88
+# ╟─b880778b-8582-4381-bd15-576dfd354604
+# ╠═3d9eef57-95cc-4b01-8603-474bdf109e84
+# ╟─dafda7e1-c39d-4103-b17a-b301574a2f33
+# ╠═13b91714-7176-454d-9f91-3671538557ff
+# ╟─b6845860-26b4-4a64-b89a-d1f0344fcd88
 # ╟─5fe39ed9-8107-400b-aa74-f99752936ebf
 # ╟─8cee4cf1-ad13-495f-b9ed-32c980f69b73
 # ╟─41c98d12-15b7-4511-a29a-b8093409bacd
@@ -1931,21 +1950,15 @@ version = "0.9.1+5"
 # ╟─7a1b0f62-9506-49c2-9595-9c62a2a86816
 # ╠═3eb4e358-73c3-47f7-8641-772b61c59a34
 # ╠═0c98e4c9-a001-4bb4-ab02-a856f50b0a15
-# ╟─d09837c4-d394-40d2-a08b-b4798a293c88
-# ╟─b880778b-8582-4381-bd15-576dfd354604
-# ╠═3d9eef57-95cc-4b01-8603-474bdf109e84
-# ╠═dafda7e1-c39d-4103-b17a-b301574a2f33
-# ╠═13b91714-7176-454d-9f91-3671538557ff
-# ╟─b6845860-26b4-4a64-b89a-d1f0344fcd88
 # ╟─75415688-1ca4-4497-a106-f88efef5f56e
 # ╟─afe6760d-e46d-4d3f-92bf-737f9bfedffb
 # ╟─7f3e6819-9fc2-4d4f-b67b-c27668abbf80
 # ╟─44169313-5d07-4a22-8e68-676993869038
 # ╟─d45f7062-fdd2-4061-840d-c9e87c2a5eea
-# ╟─085a5590-c1a5-4b3b-a893-0714efe490f1
+# ╠═085a5590-c1a5-4b3b-a893-0714efe490f1
 # ╟─c3df2089-202c-4962-be68-120fede705f0
 # ╟─361c4df4-7d4c-4053-b0bc-dce27d47cce9
-# ╠═7e685f26-7d7b-4101-85e5-481545dbbbaf
+# ╟─7e685f26-7d7b-4101-85e5-481545dbbbaf
 # ╟─98da768d-1edc-48f2-bac8-9529c7336a9e
 # ╟─d2dfb503-cec0-45d1-bf74-34857e20264c
 # ╟─64bfa7a8-7582-4e0c-8fef-db0f240f1be3
@@ -1970,7 +1983,8 @@ version = "0.9.1+5"
 # ╟─eafd22ca-3b80-4931-af70-2ac9b322ff87
 # ╟─0f0265ac-ef7f-4277-bbbd-9c19eacefbf9
 # ╟─e1f6266d-2cbc-4442-9a9d-f29c4aec1402
-# ╠═0c03555d-e924-4122-9451-e615c9326b31
+# ╟─5a5c2210-5c51-4d2b-8010-705c1802af18
+# ╟─0c03555d-e924-4122-9451-e615c9326b31
 # ╟─2140c6c7-8858-4f9e-9d8e-3e2f3ede9115
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
