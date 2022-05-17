@@ -4,29 +4,185 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 4a845f2c-f6e7-49e8-ba95-b938f52cdbad
+# ╔═╡ b4e3c02d-5fdf-4abb-a474-a9c95fb5b047
 begin
-	using Plots, Statistics, PlutoUI, Plots, Plots.Measures, LaTeXStrings, ShortCodes
-	gr(legend=false,size=(650,450),bottom_margin=0.5cm,left_margin=0.3cm)
+using PlutoUI, LaTeXStrings, ShortCodes, Plots, Plots.Measures
+	gr(legend=false,size=(650,200),bottom_margin=0.5cm,left_margin=0.3cm)
 end
 
-# ╔═╡ 565390cc-318b-4d73-8159-94a94a1fe6a1
-using Random
-
-# ╔═╡ e6c07ad8-fcff-42ab-9d44-025267e899f9
-using JLD2
-
-# ╔═╡ ddb14b0e-1e77-4395-bf45-074f9eebd4b3
-using Interpolations
-
-# ╔═╡ 28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
+# ╔═╡ 7cdf9469-75a1-43e5-a8b8-1b470244a28d
 md"""
-Functions from the MarkovChains notebook
+# Phase transitions/microstates: The Ising model
 
-In theory the scaler should not be used and we should just look at one random point at a time but this is much slower. Doing a small subset at a time by only looking at 0.1 of the points is close enough approximation. (I think)
+
+!!! info "PHSI365 Computational Physics"
+	__Nicolás Concha__, conni132@student.otago.ac.nz
+
+//will be covered by Andrew
+
+The Ising model is a problem in statistical physics that shows how macroscopic properties can arise from microstates in a material. We will be investigating the 2-Dimensional version of the problem. The power of the Ising model is its simplicity. We can take a complex system involving billions of interactions and simplify it to a small set of particles that computers can help us solve.
+
+We will take advantage of the Ising model to study how magnetic domains form and descend into disorder with temperature. We will model a 2D lattice of atoms in a ferromagnetic material. We will study how the final state of the system changes with temperature using Markov Chain Monte Carlo algorithm.
+
+An Ising model evolving from chaos to ordered domains.
+$(Resource("https://upload.wikimedia.org/wikipedia/commons/archive/e/e6/20160220081743%21Ising_quench_b10.gif",:width=>800))
+
+[By HeMath - Own work, CC BY-SA 4.0](https://commons.wikimedia.org/w/index.php?curid=37327967)
 """
 
-# ╔═╡ 6bbb78d2-b960-11ec-2cfa-8deda907e547
+# ╔═╡ 64a1b030-bca0-11ec-3b7a-231066262abe
+md"""
+
+//I will summarise what the ising model is after Andrew then start here 
+
+## Markov Chain
+
+The Markov Chain is a set of states linked by transitional probabilities. This process can represent a system with many states and give the likelihood of moving to any other state. The sequence of states that the system goes through in the Markov Chain is a Markov Process. We only consider the latest state to calculate the next iteration. 
+Each time we step through the Markov chain, we could consider the entire system and ask for the next state, but that would require us to have the Markov Chain for every state the system could be in. This is too complicated. To represent a Markov Chain that would describe all these state transitions, we would need a matrix with sides of N, where N is the total number of states the system could be in. For an Ising Model the size of a chessboard, the transition matrix would have to have $(2^{64})^2$ cells. 
+
+### Nearest-Neighbours
+
+To simplify the problem, we can remember that we are modelling a system of magnetic dipoles. Magnetic fields fall off according to the inverse square law, so we can simplify our model to only consider the closest cells in the matrix. This will still provide a good explanation for what is going on in the microstates, and the problem becomes very simple and cheap to compute.
+
+So for each step of the Markov Chain, we can consider just a small area around each cell and find the most probable state from that small system. In the simplest form, we can consider only the direct neighbours of the cell being considered.
+
+
+"""
+
+# ╔═╡ 93288a29-f90c-4a6c-87d7-b10bac04a122
+md"""
+## System Energy
+
+The system we are modelling has a total energy that is calculated by finding the exchange energies between all the interacting magnetic fields. If we only consider the interactions between the nearest neighbours, then the total energy of the system is quick to calculate. 
+
+For the full system, the energy can be calculated using this equation:
+
+!!! info "Ising Model"
+
+	$E = - \mu B\sum_is_i  -J\sum_{\langle i,j\rangle}s_is_j$
+
+	where $\mu$ is the atomic _magnetic moment_, and $J$ is called the *exchange 		energy*, specifying the strength of the spin-spin interaction between the atoms.
+
+B here is the external magnetic field. In our experiments we will say there is no external field, so we can simplify our calculations. This also gives us more interesting views of the Ising model, with clear domains of positive and negative spin.
+
+When the cells are aligned in local domains, their interaction energy will be low. This lets us analytically calculate how ordered a system is from its energy. This gives us a term to record as we change T, and we can use this to find the phase change.
+
+
+
+"""
+
+# ╔═╡ 04c6e6a6-5546-4de6-9576-105231b0f037
+md"""
+## Markov Chain Monte Carlo
+
+The Markov Process uses probability to iterate our model, but the final results will be slightly random. We need to take an average of the system’s energy around the equilibrium state to generate more confident results. 
+
+We can start at a random state and iterate the system for a warm-up period. After this period, the system will reach a steady sequence of equilibrium states. From there, we can record the energy of the system after each step in the Markov Chain and take an average over time. This process gives us a more precise final energy for each temperature.
+
+## Transition probabilities for MCMC
+
+The probability of occupying any state based on its energy is derived from the system's entropy:
+
+$$S \equiv -k_B\sum_np_n\log{p_n}$$
+
+!!! info "Canonical Distribution"
+
+	$p_n=\cfrac{e^{-\beta E_n}}{Z}$
+
+	where $\beta=1/(k_B T)$ defines the system temperature $T$, and where the 	 normalisation is determined by $\sum_n p_n=1$, namely
+
+	$\sum_n e^{-\beta E_n} =Z.$
+
+From the cannonical distribution, we know tha the probabillity distribution for states around the equilibrium energy will be:
+
+$$\pi_n\equiv\frac{e^{-\beta E_n}}{Z}\tag{1}$$
+
+When $E_n$ is the energy or the equilibrium states n.
+
+The MCMC algorithm should eventually reach an equilibrium ensemble of states. This can only happen if the Markov Process satisfies the condition of detailed balance. This allows a stationary distribution to exist:
+
+!!! info "Stationary Distribution"
+
+	$T_{ij}\pi_j=T_{ji}\pi_{i}$
+
+	where 
+
+	$T_{ij}=\textrm{Probability of transitioning to state} \;i\; \textrm{given initial 	   state} \;j.\;$
+
+So we know that the the process is reversible:
+
+>$$T_{ij}\pi_j=T_{ji}\pi_i\tag{2}$$
+
+From (1) and (2) we have:
+
+>$$T_{ij}e^{-\beta E_j}=T_{ji}e^{-\beta E_i}\tag{3}$$
+
+## Metropolis-Hastings algorithm
+
+We will use the Metropolis-Hastings algorithm to handle state transitions. It is described as follows (MarkovChainMonteCarlo.jl):
+
+A simple (and popular) recipe can be followed to sample according to (3):
+
+1. Suppose the current state of the Markov chain is $j$
+1. Make a trial change to $i$
+1. If $E_i<E_j$ accept the change
+1. If $E_i> E_j$, accept the change with probability $e^{-\beta(E_i-E_j)}$
+
+The probability term $e^{-\beta(E_i-E_j)}$ comes from (3):
+$$T_{ij}=T_{ji}e^{-\beta (E_i-E_j)}$$
+
+The probabilistic transition in the last step simulates thermal fluctuations.
+
+The relative transition probabilities for this algorithm are
+
+$$T_{ij}=\begin{cases}1\quad\quad\quad \quad\quad\quad \textrm{if}\;\; E_i<E_j\\
+e^{-\beta(E_i-E_j)}\quad\quad\quad \textrm{if}\;\; E_i>E_j
+\end{cases}$$
+
+
+//I will refine the above sections and pablo can follow from here after maybe summarising the important parts you need that ive mentioned
+
+"""
+
+# ╔═╡ 7d774edf-d4a8-4caa-b088-4302ac8a785a
+md"""
+## Next Steps
+
+//I believe Andrew will cover this
+
+The example model we were given is interesting to play around with. It iterates a system using a Markov Chain from noise to order. We changed the temperature to see where order would break down and watched the simulation evolve with more MCMC iterations. Following the process above, we will extend the example model given to us to find the phase transition temperature and compare it to the analytical solution.
+
+Onsager's analytical solution to the Ising Model predicts that the phase transition should occur at a critical temperature $T_c$.
+
+$T_c = \dfrac{2J}{k (\log(1+\sqrt{2}))}$
+"""
+
+# ╔═╡ ba0651e3-b60a-45e7-8719-72dbdc6c09f9
+md"""
+## Predictions
+
+//we can bring this up with pablo? pablo can define model and give brief predictions before we reveal results?
+
+In the first lecture notes for the Ising model we are told to find:
+- How is your numerical result for $T_c$ affected by: 
+  - The size of the lattice?
+  - The number of Monte-Carlo iterations?
+
+### Size of lattice
+
+I predict that with a larger lattice the patterns of the domains will look very similar and the average energy will be consistent with smaller models. As long as the lattice is big enough to fit multiple domains, the results should be just as useful. 
+With a small enough lattice, I predict that the entire system will eventually align in the same direction. While the energy will be the same if the poles are all pointing out of the screen or pointing inwards, that energy will be lower than the energy of a system with domain borders. Due to this, I would make sure my lattice is large enough to model the macroscopic effects I am looking for in experiments with the Ising Model.
+
+
+### Number of Monte-Carlo iterations
+
+I would predict that the results would get more accurate with more iterations. We are looking for steady equilibrium sequences, and those should theoretically be found as the number of iterations nears infinity.
+"""
+
+# ╔═╡ bea489e8-8089-4cad-8d0c-d879c96073db
+md"""Following is code from the example in MarkovChainMonteCarlo.jl"""
+
+# ╔═╡ 69d85a1a-a08a-49d7-85bf-8b9b4a7685b7
 # Flip a spin with the modified Metropolis rate
 function flip(s,ΔE,β)
     # scaler variable is used to make the algorithm faster. we set a scaling value which will limit the times we actually flip the spin for negative ΔE.
@@ -39,10 +195,10 @@ function flip(s,ΔE,β)
     end
 end
 
-# ╔═╡ e65b4a3c-d1bb-48b6-9930-60e56aa860db
+# ╔═╡ 2ec0a53f-606a-43a3-96ac-9e20a83af499
 # step entire lattice one step forward in "time" along the Markov chain
-function step!(S,β,J)
-    ΔE = J*2*S.*(
+function step!(S,β)
+    ΔE = 2*S.*(
         circshift(S,(0, 1)).+
         circshift(S,(0,-1)).+
         circshift(S,(1, 0)).+
@@ -54,302 +210,60 @@ function step!(S,β,J)
     return
 end
 
-# ╔═╡ b1fc03d3-9b28-4c6e-a686-b0b650707948
-# could be good if we can vectorise the for loop to make faster but currently this is slower
-# function step2!(S,β,J)
-#     ΔE = J*2*S.*(
-#         circshift(S,(0, 1)).+
-#         circshift(S,(0,-1)).+
-#         circshift(S,(1, 0)).+
-#         circshift(S,(-1,0)))
-    
-# 	S =[flip(S[i],ΔE[i],β) for i in eachindex(S)]
-    
-#     return
-# end
+# ╔═╡ cecc354a-b9e5-41d7-b9e6-2b783cc49f4a
+T = 1.0 # set kB = 1
 
-# ╔═╡ bac58c1b-5aef-4efe-92aa-0b81da616fdf
-md"""
-$$E = -J\sum_{\langle i,j\rangle}s_is_j$$
+# ╔═╡ 96c7d075-63e3-4391-bce8-9d48bcbd7e64
+begin
+		S = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
+		#heatmap(S,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end;
 
-where $\mu$ is the atomic *magnetic moment*, $B$ is external magnetic field and $J$, is called the *exchange energy* and it specifies the strenght of the spin-spin interaction between the atoms.
-"""
+# ╔═╡ be3c613b-ce67-4149-8009-e7b5f72dfadc
+S0 = rand([1.0, -1.0], 60, 60); # initial condition
 
-# ╔═╡ 2d7e4c3b-60d3-4a40-b788-5d7729dc62ba
-function E(S,J)
-	sum(-J*2*S.*(
+# ╔═╡ 9b03d2d6-cbcd-48cd-a14a-275e9c106cd9
+anim = @animate for i in 1:500
+	step!(S0, 1.0/T)
+	heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
+end
+
+# ╔═╡ afc86302-022a-416f-b9d3-582a758aeb3a
+gif(anim, "ising.gif", fps = 20)
+
+# ╔═╡ c249ef44-d01e-415b-8a9b-bd2a469b646d
+md"""Starting to write code for Monte Carlo algorithm"""
+
+# ╔═╡ 6c60f9b1-edfd-458a-959f-c6b1f68e3fc6
+function totalEnergy(S)
+    ΔE = 2*S.*(
         circshift(S,(0, 1)).+
         circshift(S,(0,-1)).+
         circshift(S,(1, 0)).+
-        circshift(S,(-1,0))))
+        circshift(S,(-1,0)))
+    
+    return sum(ΔE)
 end
 
-# ╔═╡ cf444542-0356-4979-8eb6-3c359fb497d3
-J = 1
-
-# ╔═╡ b86540ed-1a14-4386-b9d9-344c81e5a905
+# ╔═╡ c2c4a9ef-cfc6-440d-a24e-351dea616302
 md"""
-Energy is much lower with a ordered matrix compared to random/chaotic matrix
+!!! info "Comments"
+	Great background and start for the solution. I suggest adding a short paragraph about the historical significance of the analytical solution.
+
+	Mark 20/20
 """
-
-# ╔═╡ 7ac720a9-7e15-4713-88ca-d234b8f132ab
-begin
-	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
-E(S_random,J)
-
-# ╔═╡ 7018a605-4be9-44af-bae8-d455566168fb
-begin
-	S_same = rand([1.0], 60, 60) # random spin [1, -1] matrix (very high T)
-	heatmap(S_same,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-end
-
-# ╔═╡ 8a9ded08-3139-4913-b9b9-850a3661dc98
-E(S_same,J)
-
-# ╔═╡ f708a609-0461-4a71-87a5-1a990dffc4d8
-md"""
-evolve the system with 100,1000,10000 steps and plot the final energy at each temperature. temperature is $T K_b$ when comparing to the analytical solution.
-"""
-
-# ╔═╡ b63a826d-6175-4fe1-a28c-7ec7a3f5db92
-begin
-	result = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 60, 60)# initial condition
-		for i in 1:10000
-			step!(S0, 1.0/T,J)
-			
-		end
-		append!(result, E(S0,J))
-	end
-end
-
-# ╔═╡ 4639fde1-c205-4078-a39f-8330acb17346
-begin
-	result2 = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 60, 60)# initial condition
-		for i in 1:1000
-			step!(S0, 1.0/T,J)
-		end
-		append!(result2, E(S0,J))
-	end
-end
-
-# ╔═╡ 228edf68-925c-44f8-9091-c89e891fadfd
-begin
-	result3 = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 60, 60)# initial condition
-		for i in 1:100
-			step!(S0, 1.0/T,J)
-		end
-		append!(result3, E(S0,J))
-	end
-end
-
-# ╔═╡ bbe11a7f-fcbc-4c1b-95b0-b41beb371f3c
-begin
-	plot(0.1:0.1:10, result, label = "10000 runs", legend=:bottomright)
-	plot!(0.1:0.1:10, result2, label = "1000 runs")
-	plot!(0.1:0.1:10, result3, label = "100 runs")
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
-# ╔═╡ a1253c47-61a1-444a-b1c3-072bf51c94c9
-md"""
-10000 runs seem to be relativly stable while 100 runs is definitely not enough
-
-trying the same with different size matrices
-"""
-
-# ╔═╡ c5bab0ed-1728-4a8e-9694-9423f91ea87e
-begin
-	result2small = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 30, 30)# initial condition
-		for i in 1:1000
-			step!(S0, 1.0/T,J)
-		end
-		append!(result2small, E(S0,J))
-	end
-end
-
-# ╔═╡ da685969-92c9-4827-96c3-eb485577ecb7
-begin
-	result2big = []
-	for T in 0.1:0.1:10
-		S0 = rand([1.0, -1], 120, 120)# initial condition
-		for i in 1:1000
-			step!(S0, 1.0/T,J)
-		end
-		append!(result2big, E(S0,J))
-	end
-end
-
-# ╔═╡ b61bc17b-78fa-4274-8f3f-9c4d073784d1
-begin
-	plot(0.1:0.1:10, result2small/30^2, label = "30×30", legend=:bottomright)
-	plot!(0.1:0.1:10, result2/60^2, label = "60×60")
-	plot!(0.1:0.1:10, result2big/120^2, label = "120×120")
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy per particle")
-end
-
-# ╔═╡ 45cf4dee-42f7-40f1-883d-81e1b08644bf
-md"""
-does not appear to be any systematic differences with the different size matrices but smaller matrix has more variance.
-
-to reduce the variation of the plot save the average energy for the last 1000 runs after doing 10000 runs.
-"""
-
-# ╔═╡ 9d7a4d00-201a-4ad4-8136-c09e01d3b56f
-begin
-	result_final1 = []
-	for T in 0.1:0.1:7
-		current = []
-			S0 = rand([1.0, -1], 60, 60)# initial condition
-			for i in 1:11000
-				step!(S0, 1.0/T,J)
-				if i >= 10000
-					append!(current, E(S0,J))
-			end
-		end
-		append!(result_final1, mean(current))
-	end
-end
-
-# ╔═╡ 3874f1cf-8230-413b-9597-7959017cc419
-begin
-	plot(0.1:0.1:7, result_final1)
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
-# ╔═╡ 8f1c0d31-780a-4bc2-8837-c7588b959125
-md"""
-smooth at high temperatures but not smooth at low temps. this is cause when low temp sometimes come to a meta-stable solution that form due to the limited matrix size. example below of 2 runs with same low temp but one finishes with a line through the middle increasing energy.
-"""
-
-# ╔═╡ e4895b8a-9f10-4ee6-b915-91c195271cc4
-begin
-	Random.seed!(1234)
-	S0 = rand([1.0, -1], 60, 60); # initial condition
-	T = 0.01# set kB = 1
-	anim = @animate for i in 1:400
-		for j in 1:20
-			step!(S0, 1.0/T,J)
-		end
-		heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-	end
-	gif(anim)
-end
-
-# ╔═╡ 79fdba89-f961-44e1-af87-c31ae598723b
-begin
-	Random.seed!(234)
-	S1 = rand([1.0, -1], 60, 60); # initial condition
-	anim2 = @animate for i in 1:400
-		for j in 1:20
-			step!(S1, 1.0/T, J)
-		end
-		heatmap(S1,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-	end
-	gif(anim2)
-end
-
-# ╔═╡ 241d8c3c-a9de-4463-aa30-ef73df156412
-md"""
-then do 50 runs of this at each temp and we get basically a smooth line
-"""
-
-# ╔═╡ c8ba9f78-e6a0-4cb1-9743-fd3fb36b07af
-T2 = 0.1:0.1:7
-
-# ╔═╡ ed1864d4-fe95-4bec-be67-7be33f85e169
-# do not run (2500 second runtime)
-# begin
-#  	result_final = []
-#  	for T in T2
-#  		current = []
-#  		for run in 1:50
-#  			S0 = rand([1.0, -1], 60, 60)# initial condition
-#  			for i in 1:11000
-#  				step!(S0, 1.0/T,J)
-#  				if i >= 10000
-#  					append!(current, E(S0,J))
-#  				end
-#  			end
-# 		end
-# 		append!(result_final, mean(current))
-# 	end
-# end
-
-# ╔═╡ 1391a1e8-40c1-4def-aeb8-54d91550d209
-# @save "result_final.jld2" result_final # creates a local .jld2 file
-
-# ╔═╡ b5db5cc5-48b3-4617-b3fd-d409e697b195
-@load "result_final.jld2" result_final
-
-# ╔═╡ 4ae940f0-a90d-4488-b08f-0c3140ccf177
-begin
-	plot(T2, result_final)
-	vline!([2*J/(log(1+sqrt(2)))], label = "Onsager's analytical solution")
-	xlabel!("T * Kb")
-	ylabel!("Energy")
-end
-
-# ╔═╡ c3fe4f8c-9a3f-4dd0-883e-e0a95dcef146
-function gradientCalc(result)
-    maxDiff = 0
-    indexOfMaxDiffInResult = 0
-    for i in eachindex(result)
-        if i == 1
-            continue
-        else
-            if result[i]-result[i-1] > maxDiff
-                maxDiff = result[i]-result[i-1]
-                indexOfMaxDiffInResult = [i,i-1]
-            end
-        end
-    end
-    return indexOfMaxDiffInResult
-end
-
-# ╔═╡ d7a84d78-16e8-4691-ab54-cbe538ea34b2
-mean(T2[gradientCalc(result_final)])
-
-# ╔═╡ 9a0a90b2-6e0f-4a41-a948-1fcbe6b80c84
-findfirst(diff(result_final) .== maximum(diff(result_final)))
-
-# ╔═╡ 3dea0484-115a-4d29-80ec-e6d4089f3f6b
-diff(result_final) .== maximum(diff(result_final))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ShortCodes = "f62ebe17-55c5-4640-972f-b59c0dd11ccf"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-Interpolations = "~0.13.6"
-JLD2 = "~0.4.22"
 LaTeXStrings = "~1.3.0"
-Plots = "~1.28.1"
+Plots = "~1.27.5"
 PlutoUI = "~0.7.38"
 ShortCodes = "~0.3.3"
 """
@@ -379,12 +293,6 @@ uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
-[[deps.AxisAlgorithms]]
-deps = ["LinearAlgebra", "Random", "SparseArrays", "WoodburyMatrices"]
-git-tree-sha1 = "66771c8d21c8ff5e3a93379480a2307ac36863f7"
-uuid = "13072b0f-2c55-5437-9ae7-d433b7a33950"
-version = "1.0.1"
-
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
@@ -408,9 +316,9 @@ version = "1.14.0"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
-git-tree-sha1 = "bf98fa45a0a4cee295de98d4c1462be26345b9a1"
+git-tree-sha1 = "1e315e3f4b0b7ce40feded39c73049692126cf53"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-version = "0.1.2"
+version = "0.1.3"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -419,16 +327,22 @@ uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.0"
 
 [[deps.ColorSchemes]]
-deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
-git-tree-sha1 = "12fc73e5e0af68ad3137b886e3f7c1eacfca2640"
+deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "Random"]
+git-tree-sha1 = "7297381ccb5df764549818d9a7d57e45f1057d30"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.17.1"
+version = "3.18.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
-git-tree-sha1 = "024fe24d83e4a5bf5fc80501a314ce0d1aa35597"
+git-tree-sha1 = "63d1e802de0c4882c00aee5cb16f9dd4d6d7c59c"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
-version = "0.11.0"
+version = "0.11.1"
+
+[[deps.ColorVectorSpace]]
+deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "SpecialFunctions", "Statistics", "TensorCore"]
+git-tree-sha1 = "3f1f500312161f1ae067abe07d13b40f78f32e07"
+uuid = "c3611d14-8923-5661-9e6a-0046d554d3a4"
+version = "0.9.8"
 
 [[deps.Colors]]
 deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
@@ -459,9 +373,9 @@ version = "1.10.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "3daef5523dd2e769dad2365274f760ff5f282c7d"
+git-tree-sha1 = "cc1a8e22627f33c789ab60b36a9132ac050bbf75"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.11"
+version = "0.18.12"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -513,12 +427,6 @@ deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers",
 git-tree-sha1 = "d8a578692e3077ac998b50c0217dfd67f21d1e5f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.0+0"
-
-[[deps.FileIO]]
-deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "80ced645013a5dbdc52cf70329399c35ce007fae"
-uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.13.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -616,9 +524,10 @@ uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
 version = "0.0.4"
 
 [[deps.HypertextLiteral]]
-git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
+deps = ["Tricks"]
+git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
 uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.3"
+version = "0.9.4"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
@@ -635,17 +544,11 @@ version = "0.5.1"
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
-[[deps.Interpolations]]
-deps = ["AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "Requires", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
-git-tree-sha1 = "b7bc05649af456efc75d178846f47006c2c4c3c7"
-uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-version = "0.13.6"
-
 [[deps.InverseFunctions]]
 deps = ["Test"]
-git-tree-sha1 = "91b5dcf362c5add98049e6c29ee756910b03051d"
+git-tree-sha1 = "336cc738f03e069ef2cac55a104eb823455dca75"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
@@ -661,12 +564,6 @@ version = "1.4.0"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
-
-[[deps.JLD2]]
-deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
-git-tree-sha1 = "81b9477b49402b47fbe7f7ae0b252077f53e4a08"
-uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.22"
 
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
@@ -794,9 +691,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "76c987446e8d555677f064aaac1145c4c17662f8"
+git-tree-sha1 = "09e4b894ce6a976c354a69041a04748180d43637"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.14"
+version = "0.3.15"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -852,12 +749,6 @@ version = "1.0.0"
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
-[[deps.OffsetArrays]]
-deps = ["Adapt"]
-git-tree-sha1 = "043017e0bdeff61cfbb7afeb558ab29536bbb5ed"
-uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.10.8"
-
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
@@ -868,11 +759,21 @@ version = "1.3.5+1"
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
+[[deps.OpenLibm_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
+
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "ab05aa4cc89736e95915b01e7279e61b1bfe33b8"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "1.1.14+0"
+
+[[deps.OpenSpecFun_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
+uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
+version = "0.5.5+0"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -921,9 +822,9 @@ version = "1.2.0"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "d05baca9ec540de3d8b12ef660c7353aae9f9477"
+git-tree-sha1 = "6f2dd1cf7a4bbf4f305a0d8750e351cb46dfbe80"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.28.1"
+version = "1.27.6"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -954,12 +855,6 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[deps.Random]]
 deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-
-[[deps.Ratios]]
-deps = ["Requires"]
-git-tree-sha1 = "dc84268fe0e3335a62e315a3a7cf2afa7178a734"
-uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
-version = "0.4.3"
 
 [[deps.RecipesBase]]
 git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
@@ -1030,6 +925,12 @@ version = "1.0.1"
 deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
+[[deps.SpecialFunctions]]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+git-tree-sha1 = "5ba658aeecaaf96923dce0da9e703bd1fe7666f9"
+uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
+version = "2.1.4"
+
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
 git-tree-sha1 = "cd56bf18ed715e8b09f06ef8c6b781e6cdc49911"
@@ -1054,9 +955,9 @@ version = "0.33.16"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "8f705dd141733d79aa2932143af6c6e0b6cea8df"
+git-tree-sha1 = "e75d82493681dfd884a357952bbd7ab0608e1dc3"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.6"
+version = "0.6.7"
 
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
@@ -1084,6 +985,12 @@ version = "1.7.0"
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 
+[[deps.TensorCore]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "1feb45f88d133a655e001435632f019a9a1bcdb6"
+uuid = "62fd8b95-f654-4bbd-a8a5-9c27f68ccd50"
+version = "0.1.1"
+
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -1093,6 +1000,11 @@ deps = ["Random", "Test"]
 git-tree-sha1 = "216b95ea110b5972db65aa90f88d8d89dcb8851c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.6"
+
+[[deps.Tricks]]
+git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
+uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
+version = "0.1.6"
 
 [[deps.URIs]]
 git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
@@ -1128,12 +1040,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "4528479aa01ee1b3b4cd0e6faef0e04cf16466da"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.25.0+0"
-
-[[deps.WoodburyMatrices]]
-deps = ["LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "de67fa59e33ad156a590055375a30b23c40299d3"
-uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
-version = "0.5.5"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -1339,46 +1245,23 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╠═4a845f2c-f6e7-49e8-ba95-b938f52cdbad
-# ╟─28d8d1b9-b8ac-45ea-9efa-bab0416cdf8b
-# ╠═6bbb78d2-b960-11ec-2cfa-8deda907e547
-# ╠═e65b4a3c-d1bb-48b6-9930-60e56aa860db
-# ╠═b1fc03d3-9b28-4c6e-a686-b0b650707948
-# ╟─bac58c1b-5aef-4efe-92aa-0b81da616fdf
-# ╠═2d7e4c3b-60d3-4a40-b788-5d7729dc62ba
-# ╠═cf444542-0356-4979-8eb6-3c359fb497d3
-# ╠═b86540ed-1a14-4386-b9d9-344c81e5a905
-# ╠═7ac720a9-7e15-4713-88ca-d234b8f132ab
-# ╠═3bdcd8c5-5b31-4c22-bd82-5aa8e6ce77d5
-# ╠═7018a605-4be9-44af-bae8-d455566168fb
-# ╠═8a9ded08-3139-4913-b9b9-850a3661dc98
-# ╠═f708a609-0461-4a71-87a5-1a990dffc4d8
-# ╠═b63a826d-6175-4fe1-a28c-7ec7a3f5db92
-# ╠═4639fde1-c205-4078-a39f-8330acb17346
-# ╠═228edf68-925c-44f8-9091-c89e891fadfd
-# ╠═bbe11a7f-fcbc-4c1b-95b0-b41beb371f3c
-# ╠═a1253c47-61a1-444a-b1c3-072bf51c94c9
-# ╠═c5bab0ed-1728-4a8e-9694-9423f91ea87e
-# ╠═da685969-92c9-4827-96c3-eb485577ecb7
-# ╠═b61bc17b-78fa-4274-8f3f-9c4d073784d1
-# ╠═45cf4dee-42f7-40f1-883d-81e1b08644bf
-# ╠═9d7a4d00-201a-4ad4-8136-c09e01d3b56f
-# ╠═3874f1cf-8230-413b-9597-7959017cc419
-# ╠═8f1c0d31-780a-4bc2-8837-c7588b959125
-# ╠═565390cc-318b-4d73-8159-94a94a1fe6a1
-# ╠═e4895b8a-9f10-4ee6-b915-91c195271cc4
-# ╠═79fdba89-f961-44e1-af87-c31ae598723b
-# ╟─241d8c3c-a9de-4463-aa30-ef73df156412
-# ╠═c8ba9f78-e6a0-4cb1-9743-fd3fb36b07af
-# ╠═ed1864d4-fe95-4bec-be67-7be33f85e169
-# ╠═e6c07ad8-fcff-42ab-9d44-025267e899f9
-# ╠═1391a1e8-40c1-4def-aeb8-54d91550d209
-# ╠═b5db5cc5-48b3-4617-b3fd-d409e697b195
-# ╠═4ae940f0-a90d-4488-b08f-0c3140ccf177
-# ╠═c3fe4f8c-9a3f-4dd0-883e-e0a95dcef146
-# ╠═d7a84d78-16e8-4691-ab54-cbe538ea34b2
-# ╠═ddb14b0e-1e77-4395-bf45-074f9eebd4b3
-# ╠═9a0a90b2-6e0f-4a41-a948-1fcbe6b80c84
-# ╠═3dea0484-115a-4d29-80ec-e6d4089f3f6b
+# ╟─b4e3c02d-5fdf-4abb-a474-a9c95fb5b047
+# ╟─7cdf9469-75a1-43e5-a8b8-1b470244a28d
+# ╟─64a1b030-bca0-11ec-3b7a-231066262abe
+# ╟─93288a29-f90c-4a6c-87d7-b10bac04a122
+# ╟─04c6e6a6-5546-4de6-9576-105231b0f037
+# ╟─7d774edf-d4a8-4caa-b088-4302ac8a785a
+# ╟─ba0651e3-b60a-45e7-8719-72dbdc6c09f9
+# ╟─bea489e8-8089-4cad-8d0c-d879c96073db
+# ╟─69d85a1a-a08a-49d7-85bf-8b9b4a7685b7
+# ╟─2ec0a53f-606a-43a3-96ac-9e20a83af499
+# ╠═cecc354a-b9e5-41d7-b9e6-2b783cc49f4a
+# ╟─96c7d075-63e3-4391-bce8-9d48bcbd7e64
+# ╠═be3c613b-ce67-4149-8009-e7b5f72dfadc
+# ╠═9b03d2d6-cbcd-48cd-a14a-275e9c106cd9
+# ╠═afc86302-022a-416f-b9d3-582a758aeb3a
+# ╟─c249ef44-d01e-415b-8a9b-bd2a469b646d
+# ╠═6c60f9b1-edfd-458a-959f-c6b1f68e3fc6
+# ╟─c2c4a9ef-cfc6-440d-a24e-351dea616302
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
