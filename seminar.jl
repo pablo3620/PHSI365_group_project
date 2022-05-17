@@ -20,6 +20,33 @@ md"""
 
 """
 
+# ╔═╡ 52b90ded-8b2c-4213-817a-2534753345ef
+load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/Images/isingman.jpg"))
+
+# ╔═╡ 981f8a50-a658-446e-81cd-c843aed3ccf8
+md"""
+# Domains
+"""
+
+# ╔═╡ 3a5e2adc-ca2f-49dd-aee5-20562084d92c
+load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/Images/domain.png"))
+
+# ╔═╡ 3bb83472-3375-4901-80d5-458b70923a58
+md"""
+# Applications
+"""
+
+# ╔═╡ 5bc168e8-421f-4e56-bfdb-1530a7fc01d4
+load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/Images/neurons.jpg"))
+
+# ╔═╡ e62c4b74-d42a-47a9-8d9f-f12b032d36da
+load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/Images/ice.jpg"))
+
+# ╔═╡ e257a7d9-5d28-4bf5-9552-1c6180e1131a
+md"""
+# Summary
+"""
+
 # ╔═╡ 531100ff-c192-4b80-806e-a900460167b2
 md"""
 $T_c = \dfrac{2J}{k (\log(1+\sqrt{2}))}$
@@ -1882,6 +1909,13 @@ version = "0.9.1+5"
 # ╟─0e5b6084-ce70-11ec-0d81-6137f91044bd
 # ╟─3ee5e138-b777-40b8-bab0-7f310f8a93e6
 # ╟─dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
+# ╟─52b90ded-8b2c-4213-817a-2534753345ef
+# ╠═981f8a50-a658-446e-81cd-c843aed3ccf8
+# ╟─3a5e2adc-ca2f-49dd-aee5-20562084d92c
+# ╟─3bb83472-3375-4901-80d5-458b70923a58
+# ╟─5bc168e8-421f-4e56-bfdb-1530a7fc01d4
+# ╟─e62c4b74-d42a-47a9-8d9f-f12b032d36da
+# ╠═e257a7d9-5d28-4bf5-9552-1c6180e1131a
 # ╟─531100ff-c192-4b80-806e-a900460167b2
 # ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
 # ╟─63641878-36af-4728-9f39-4cd911fc85ef
