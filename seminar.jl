@@ -191,14 +191,16 @@ md"""
 """
 
 # ╔═╡ 7f3e6819-9fc2-4d4f-b67b-c27668abbf80
-function anim_ising(;T, J, seed = 1234)
-	Random.seed!(1234)
+function anim_ising(;T, J, seed = 1234, frames = 500, Δt = 1)
+	Random.seed!(seed)
 	S0 = rand([1.0, -1], 60, 60); # initial condition
-	anim = @animate for i in 1:1000
-		step!(S0, 1.0/T,J)
+	anim = @animate for i in 1:Δt:(frames*Δt)
+		for i in 1:Δt
+			step!(S0, 1.0/T,J)
+		end
 		heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 	end
-	gif(anim)
+	gif(anim, fps = 15)
 end
 
 # ╔═╡ 44169313-5d07-4a22-8e68-676993869038
@@ -373,32 +375,11 @@ md"""
 smooth at high temperatures but not smooth at low temps. this is cause when low temp sometimes come to a meta-stable solution that form due to the limited matrix size. example below of 2 runs with same low temp but one finishes with a line through the middle increasing energy.
 """
 
-# ╔═╡ 8f897eaa-3e57-4a9c-85b4-2751b6f52801
-begin
-	Random.seed!(1234)
-	S1 = rand([1.0, -1], 60, 60); # initial condition
-	T1 = 0.01# set kB = 1
-	anim1 = @animate for i in 1:400
-		for j in 1:20
-			step!(S1, 1.0/T1,J)
-		end
-		heatmap(S1,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-	end
-	gif(anim1)
-end
+# ╔═╡ 57a90fe5-9bec-49a5-921b-10f7a040043e
+anim_ising(T = 0.01, J = J, seed = 1234, frames = 200, Δt = 40)
 
-# ╔═╡ 1988afe2-931d-4175-ada0-8d8e030a1229
-begin
-	Random.seed!(234)
-	S2 = rand([1.0, -1], 60, 60); # initial condition
-	anim2 = @animate for i in 1:400
-		for j in 1:20
-			step!(S2, 1.0/T1, J)
-		end
-		heatmap(S2,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
-	end
-	gif(anim2)
-end
+# ╔═╡ 016134ff-9fc5-4b63-bdb6-b09a1e3c7596
+anim_ising(T = 0.01, J = J, seed = 234, frames = 160, Δt = 40)
 
 # ╔═╡ a03fc080-3e53-49ed-b812-c3d004bb68e8
 T2 = 0.1:0.1:7
@@ -1955,7 +1936,7 @@ version = "0.9.1+5"
 # ╟─7f3e6819-9fc2-4d4f-b67b-c27668abbf80
 # ╟─44169313-5d07-4a22-8e68-676993869038
 # ╟─d45f7062-fdd2-4061-840d-c9e87c2a5eea
-# ╠═085a5590-c1a5-4b3b-a893-0714efe490f1
+# ╟─085a5590-c1a5-4b3b-a893-0714efe490f1
 # ╟─c3df2089-202c-4962-be68-120fede705f0
 # ╟─361c4df4-7d4c-4053-b0bc-dce27d47cce9
 # ╟─7e685f26-7d7b-4101-85e5-481545dbbbaf
@@ -1976,8 +1957,8 @@ version = "0.9.1+5"
 # ╟─b3f56c34-4376-48f9-9c40-75de9cb3c8ea
 # ╟─088c3bbc-e98b-41d8-bcb3-899da03923c6
 # ╟─5a0007df-7588-4689-96ac-6ff77a6793bf
-# ╟─8f897eaa-3e57-4a9c-85b4-2751b6f52801
-# ╟─1988afe2-931d-4175-ada0-8d8e030a1229
+# ╟─57a90fe5-9bec-49a5-921b-10f7a040043e
+# ╟─016134ff-9fc5-4b63-bdb6-b09a1e3c7596
 # ╟─a03fc080-3e53-49ed-b812-c3d004bb68e8
 # ╟─c7795f5e-97be-4c31-829f-169704aac88e
 # ╟─eafd22ca-3b80-4931-af70-2ac9b322ff87
