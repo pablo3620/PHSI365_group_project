@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -86,6 +86,7 @@ J = 1
 
 # ╔═╡ b880778b-8582-4381-bd15-576dfd354604
 begin
+	Random.seed!(5)
 	S_random = rand([1.0, -1.0], 60, 60) # random spin [1, -1] matrix (very high T)
 	heatmap(S_random,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 end
@@ -109,7 +110,7 @@ Energy is much lower with a ordered matrix compared to random/chaotic matrix
 
 # ╔═╡ 5fe39ed9-8107-400b-aa74-f99752936ebf
 md"""
-### Partition function of the Ising model
+## Partition function of the Ising model
 
 $$Z = \sum_{s_i} e^{-\beta U}$$
 """
@@ -120,7 +121,7 @@ md"""
 """
 
 # ╔═╡ 41c98d12-15b7-4511-a29a-b8093409bacd
-load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/high_energy_node.png"))
+load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/Images/high_energy_node.png"))
 
 # ╔═╡ 9b7c3c01-f3f6-46e1-83d9-06f583a4b8b5
 md"""
@@ -133,7 +134,7 @@ md"""
 """
 
 # ╔═╡ cc29f153-fa68-4445-8d83-aab550f5dcd2
-load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/low_energy_node.png"))
+load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project/main/Images/low_energy_node.png"))
 
 # ╔═╡ 587e582c-bb00-4b60-ab36-a650b8cc0d6f
 md"""
@@ -342,6 +343,11 @@ does not appear to be any systematic differences with the different size matrice
 to reduce the variation of the plot save the average energy for the last 1000 runs after doing 10000 runs.
 """
 
+# ╔═╡ 8da11fec-db26-43e6-b7b7-55ac493e37a6
+md"""
+## Final results
+"""
+
 # ╔═╡ fa3f9864-3e34-4284-b260-8dc1578f98a7
 # begin
 # 	result_final1 = []
@@ -372,7 +378,7 @@ end
 
 # ╔═╡ 5a0007df-7588-4689-96ac-6ff77a6793bf
 md"""
-smooth at high temperatures but not smooth at low temps. this is cause when low temp sometimes come to a meta-stable solution that form due to the limited matrix size. example below of 2 runs with same low temp but one finishes with a line through the middle increasing energy.
+smooth at high temperatures but not smooth at low temps. 
 """
 
 # ╔═╡ 57a90fe5-9bec-49a5-921b-10f7a040043e
@@ -1904,7 +1910,7 @@ version = "0.9.1+5"
 # ╟─3ee5e138-b777-40b8-bab0-7f310f8a93e6
 # ╟─dfbf01f0-a248-42d2-bee0-bf2ec92c3f91
 # ╟─52b90ded-8b2c-4213-817a-2534753345ef
-# ╠═981f8a50-a658-446e-81cd-c843aed3ccf8
+# ╟─981f8a50-a658-446e-81cd-c843aed3ccf8
 # ╟─3a5e2adc-ca2f-49dd-aee5-20562084d92c
 # ╟─3bb83472-3375-4901-80d5-458b70923a58
 # ╟─5bc168e8-421f-4e56-bfdb-1530a7fc01d4
@@ -1953,6 +1959,7 @@ version = "0.9.1+5"
 # ╟─69e147f2-4a5a-440b-b955-d0299f6d2e68
 # ╟─7f7bbf4d-784d-4c58-8ac6-a7b3a13a0905
 # ╟─298af11f-e059-47ea-b022-76ae152c142f
+# ╟─8da11fec-db26-43e6-b7b7-55ac493e37a6
 # ╟─fa3f9864-3e34-4284-b260-8dc1578f98a7
 # ╟─b3f56c34-4376-48f9-9c40-75de9cb3c8ea
 # ╟─088c3bbc-e98b-41d8-bcb3-899da03923c6
