@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.2
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -45,6 +45,11 @@ load(download("https://raw.githubusercontent.com/pablo3620/PHSI365_group_project
 # ╔═╡ e257a7d9-5d28-4bf5-9552-1c6180e1131a
 md"""
 # Summary
+"""
+
+# ╔═╡ 3909b457-44f5-44c4-8286-89fe4273a735
+md"""
+$(Resource("https://upload.wikimedia.org/wikipedia/commons/archive/e/e6/20160220081743%21Ising_quench_b10.gif",:width=>800))
 """
 
 # ╔═╡ 531100ff-c192-4b80-806e-a900460167b2
@@ -201,16 +206,16 @@ function anim_ising(;T, J, seed = 1234, frames = 500, Δt = 1)
 		end
 		heatmap(S0,aspect_ratio=1,axis=false,ticks=false,c=:grayC)
 	end
-	gif(anim, fps = 15)
+	gif(anim, fps = 20)
 end
 
 # ╔═╡ 44169313-5d07-4a22-8e68-676993869038
 md"""
-animation of ising model evolution at low temperature $(k_B T = 0.2)$
+animation of ising model evolution at low temperature $(k_B T = 1)$
 """
 
 # ╔═╡ d45f7062-fdd2-4061-840d-c9e87c2a5eea
-anim_ising(T = 0.2, J = J)
+anim_ising(T = 1, J = J)
 
 # ╔═╡ 085a5590-c1a5-4b3b-a893-0714efe490f1
 md"""
@@ -218,7 +223,7 @@ animation of ising model evolution at critical temperature as according to Onsag
 """
 
 # ╔═╡ c3df2089-202c-4962-be68-120fede705f0
-anim_ising(T = 2*J/(log(1+sqrt(2))), J = J)
+anim_ising(T = 2*J/(log(1+sqrt(2))), J = J, seed = 123)
 
 # ╔═╡ 361c4df4-7d4c-4053-b0bc-dce27d47cce9
 md"""
@@ -293,8 +298,6 @@ end
 # ╔═╡ 20a9fe14-bbcb-4491-8760-13a67b6d1a04
 md"""
 10000 runs seem to be relativly stable while 100 runs is definitely not enough
-
-trying the same with different size matrices
 """
 
 # ╔═╡ 1868c4ca-4c3e-4a37-83e4-264472fb9854
@@ -339,8 +342,6 @@ end
 # ╔═╡ 298af11f-e059-47ea-b022-76ae152c142f
 md"""
 does not appear to be any systematic differences with the different size matrices but smaller matrix has more variance.
-
-to reduce the variation of the plot save the average energy for the last 1000 runs after doing 10000 runs.
 """
 
 # ╔═╡ 8da11fec-db26-43e6-b7b7-55ac493e37a6
@@ -1916,6 +1917,7 @@ version = "0.9.1+5"
 # ╟─5bc168e8-421f-4e56-bfdb-1530a7fc01d4
 # ╟─e62c4b74-d42a-47a9-8d9f-f12b032d36da
 # ╟─e257a7d9-5d28-4bf5-9552-1c6180e1131a
+# ╟─3909b457-44f5-44c4-8286-89fe4273a735
 # ╟─531100ff-c192-4b80-806e-a900460167b2
 # ╟─5846ae7d-5a5a-4380-8599-7c486e75e6ff
 # ╟─63641878-36af-4728-9f39-4cd911fc85ef
